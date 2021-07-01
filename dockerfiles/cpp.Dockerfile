@@ -105,6 +105,8 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           -S /opt/rapids/raft/cpp \
           -B /opt/rapids/raft/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
+          -D BUILD_TESTS=OFF \
+          -D BUILD_BENCHMARKS=OFF \
  && cmake --build /opt/rapids/raft/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcuml from source
@@ -182,6 +184,8 @@ RUN rm -rf /opt/rapids/* \
           -S /opt/rapids/raft/cpp \
           -B /opt/rapids/raft/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
+          -D BUILD_TESTS=OFF \
+          -D BUILD_BENCHMARKS=OFF \
  && cmake --build /opt/rapids/raft/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcuml
