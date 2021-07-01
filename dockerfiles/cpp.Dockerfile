@@ -149,6 +149,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
           -D rmm_ROOT=/opt/rapids/rmm/build \
           -D CUDF_ENABLE_ARROW_S3=OFF \
+          -D CUDA_TOOLKIT_ROOT_DIR="$CUDA_HOME" \
  && cmake --build /opt/rapids/cudf/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcuspatial from source
@@ -223,6 +224,7 @@ RUN rm -rf /opt/rapids/* \
           -B /opt/rapids/cudf/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
           -D CUDF_ENABLE_ARROW_S3=OFF \
+          -D CUDA_TOOLKIT_ROOT_DIR="$CUDA_HOME" \
  && cmake --build /opt/rapids/cudf/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcuspatial
