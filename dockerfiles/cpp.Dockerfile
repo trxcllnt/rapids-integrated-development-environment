@@ -76,12 +76,24 @@ ARG RAPIDS_CMAKE_COMMON_ARGS="\
 -D CMAKE_CUDA_COMPILER_LAUNCHER=/usr/bin/sccache"
 
 ARG RAPIDS_VERSION=21.08
+
 ARG RMM_BRANCH=branch-21.08
+ARG RMM_GIT_REPO="https://github.com/rapidsai/rmm.git"
+
 ARG RAFT_BRANCH=branch-21.08
+ARG RAFT_GIT_REPO="https://github.com/rapidsai/raft.git"
+
 ARG CUDF_BRANCH=branch-21.08
+ARG CUDF_GIT_REPO="https://github.com/rapidsai/cudf.git"
+
 ARG CUML_BRANCH=branch-21.08
+ARG CUML_GIT_REPO="https://github.com/rapidsai/cuml.git"
+
 ARG CUGRAPH_BRANCH=branch-21.08
+ARG CUGRAPH_GIT_REPO="https://github.com/rapidsai/cugraph.git"
+
 ARG CUSPATIAL_BRANCH=branch-21.08
+ARG CUSPATIAL_GIT_REPO="https://github.com/rapidsai/cuspatial.git"
 
 # Step 1. Build the RAPIDS C++ projects against each other (no install)
 
@@ -92,7 +104,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
  && export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
  \
  # Build librmm from source
- && git clone --depth 1 --branch ${RMM_BRANCH} https://github.com/rapidsai/rmm.git /opt/rapids/rmm \
+ && git clone --depth 1 --branch "${RMM_BRANCH}" "${RMM_GIT_REPO}" /opt/rapids/rmm \
  && cmake -GNinja \
           -S /opt/rapids/rmm \
           -B /opt/rapids/rmm/build \
@@ -100,7 +112,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
  && cmake --build /opt/rapids/rmm/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libraft from source
- && git clone --depth 1 --branch ${RAFT_BRANCH} https://github.com/rapidsai/raft.git /opt/rapids/raft \
+ && git clone --depth 1 --branch "${RAFT_BRANCH}" "${RAFT_GIT_REPO}" /opt/rapids/raft \
  && cmake -GNinja \
           -S /opt/rapids/raft/cpp \
           -B /opt/rapids/raft/cpp/build \
@@ -110,7 +122,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
  && cmake --build /opt/rapids/raft/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcuml from source
- && git clone --depth 1 --branch ${CUML_BRANCH} https://github.com/rapidsai/cuml.git /opt/rapids/cuml \
+ && git clone --depth 1 --branch "${CUML_BRANCH}" "${CUML_GIT_REPO}" /opt/rapids/cuml \
  && cmake -GNinja \
           -S /opt/rapids/cuml/cpp \
           -B /opt/rapids/cuml/cpp/build \
@@ -132,7 +144,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
  && cmake --build /opt/rapids/cuml/cpp/build -j${PARALLEL_LEVEL} -v || true \
  \
  # Build libcugraph from source
- && git clone --depth 1 --branch ${CUGRAPH_BRANCH} https://github.com/rapidsai/cugraph.git /opt/rapids/cugraph \
+ && git clone --depth 1 --branch "${CUGRAPH_BRANCH}" "${CUGRAPH_GIT_REPO}" /opt/rapids/cugraph \
  && cmake -GNinja \
           -S /opt/rapids/cugraph/cpp \
           -B /opt/rapids/cugraph/cpp/build \
@@ -142,7 +154,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
  && cmake --build /opt/rapids/cugraph/cpp/build -j${PARALLEL_LEVEL} -v || true \
  \
  # Build libcudf from source
- && git clone --depth 1 --branch ${CUDF_BRANCH} https://github.com/rapidsai/cudf.git /opt/rapids/cudf \
+ && git clone --depth 1 --branch "${CUDF_BRANCH}" "${CUDF_GIT_REPO}" /opt/rapids/cudf \
  && cmake -GNinja \
           -S /opt/rapids/cudf/cpp \
           -B /opt/rapids/cudf/cpp/build \
@@ -153,7 +165,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
  && cmake --build /opt/rapids/cudf/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcuspatial from source
- && git clone --depth 1 --branch ${CUSPATIAL_BRANCH} https://github.com/rapidsai/cuspatial.git /opt/rapids/cuspatial \
+ && git clone --depth 1 --branch "${CUSPATIAL_BRANCH}" "${CUSPATIAL_GIT_REPO}" /opt/rapids/cuspatial \
  && cmake -GNinja \
           -S /opt/rapids/cuspatial/cpp \
           -B /opt/rapids/cuspatial/cpp/build \
@@ -172,7 +184,7 @@ RUN rm -rf /opt/rapids/* \
  && export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
  \
  # Build and install librmm
- && git clone --depth 1 --branch ${RMM_BRANCH} https://github.com/rapidsai/rmm.git /opt/rapids/rmm \
+ && git clone --depth 1 --branch "${RMM_BRANCH}" "${RMM_GIT_REPO}" /opt/rapids/rmm \
  && cmake -GNinja \
           -S /opt/rapids/rmm \
           -B /opt/rapids/rmm/build \
@@ -180,7 +192,7 @@ RUN rm -rf /opt/rapids/* \
  && cmake --build /opt/rapids/rmm/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libraft
- && git clone --depth 1 --branch ${RAFT_BRANCH} https://github.com/rapidsai/raft.git /opt/rapids/raft \
+ && git clone --depth 1 --branch "${RAFT_BRANCH}" "${RAFT_GIT_REPO}" /opt/rapids/raft \
  && cmake -GNinja \
           -S /opt/rapids/raft/cpp \
           -B /opt/rapids/raft/cpp/build \
@@ -190,7 +202,7 @@ RUN rm -rf /opt/rapids/* \
  && cmake --build /opt/rapids/raft/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcuml
- && git clone --depth 1 --branch ${CUML_BRANCH} https://github.com/rapidsai/cuml.git /opt/rapids/cuml \
+ && git clone --depth 1 --branch "${CUML_BRANCH}" "${CUML_GIT_REPO}" /opt/rapids/cuml \
  && cmake -GNinja \
           -S /opt/rapids/cuml/cpp \
           -B /opt/rapids/cuml/cpp/build \
@@ -210,7 +222,7 @@ RUN rm -rf /opt/rapids/* \
  && cmake --build /opt/rapids/cuml/cpp/build -j${PARALLEL_LEVEL} -v --target install || true \
  \
  # Build and install libcugraph
- && git clone --depth 1 --branch ${CUGRAPH_BRANCH} https://github.com/rapidsai/cugraph.git /opt/rapids/cugraph \
+ && git clone --depth 1 --branch "${CUGRAPH_BRANCH}" "${CUGRAPH_GIT_REPO}" /opt/rapids/cugraph \
  && cmake -GNinja \
           -S /opt/rapids/cugraph/cpp \
           -B /opt/rapids/cugraph/cpp/build \
@@ -218,7 +230,7 @@ RUN rm -rf /opt/rapids/* \
  && cmake --build /opt/rapids/cugraph/cpp/build -j${PARALLEL_LEVEL} -v --target install || true \
  \
  # Build and install libcudf
- && git clone --depth 1 --branch ${CUDF_BRANCH} https://github.com/rapidsai/cudf.git /opt/rapids/cudf \
+ && git clone --depth 1 --branch "${CUDF_BRANCH}" "${CUDF_GIT_REPO}" /opt/rapids/cudf \
  && cmake -GNinja \
           -S /opt/rapids/cudf/cpp \
           -B /opt/rapids/cudf/cpp/build \
@@ -228,7 +240,7 @@ RUN rm -rf /opt/rapids/* \
  && cmake --build /opt/rapids/cudf/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcuspatial
- && git clone --depth 1 --branch ${CUSPATIAL_BRANCH} https://github.com/rapidsai/cuspatial.git /opt/rapids/cuspatial \
+ && git clone --depth 1 --branch "${CUSPATIAL_BRANCH}" "${CUSPATIAL_GIT_REPO}" /opt/rapids/cuspatial \
  && cmake -GNinja \
           -S /opt/rapids/cuspatial/cpp \
           -B /opt/rapids/cuspatial/cpp/build \
