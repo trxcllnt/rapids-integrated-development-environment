@@ -1,0 +1,37 @@
+version: "3.8"
+
+x-common-service-settings: &common_service_settings
+  env_file: .env
+  tty: true
+  network_mode: "host"
+  working_dir: "/opt/rapids"
+  build: &common_build_settings
+    context: .
+    args: &common_build_args
+      UID: ${UID:-1000}
+  environment: &common_environment_variables
+    LIBCUDF_KERNEL_CACHE_PATH: "/opt/rapids/.cache/jit"
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - capabilities:
+            - gpu
+
+services:
+  cpp:
+    <<: *common_service_settings
+    image: rapidsai/cpp/ci:${RAPIDS_VERSION:-latest}-cuda${CUDA_VERSION:-11.2.2}-devel-${LINUX_VERSION:-ubuntu20.04}-amd64
+    build:
+      <<: *common_build_settings
+      dockerfile: dockerfiles/cpp.Dockerfile
+      args:
+        <<: *common_build_args
+        GCC_VERSION: "${GCC_VERSION:-9}"
+        SCCACHE_VERSION: "${SCCACHE_VERSION:-0.2.15}"
+        PARALLEL_LEVEL: "${PARALLEL_LEVEL:-4}"
+        SCCACHE_REGION: "${SCCACHE_REGION:-}"
+        SCCACHE_BUCKET: "${SCCACHE_BUCKET:-}"
+        AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
+        AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.2.2}-devel-${LINUX_VERSION:-ubuntu20.04}
