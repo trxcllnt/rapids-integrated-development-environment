@@ -7,8 +7,10 @@ FROM ${BASE_IMAGE}
 ARG GCC_VERSION=9
 ARG SCCACHE_VERSION=0.2.15
 
+SHELL ["/bin/bash", "-c"]
+
 RUN export DEBIAN_FRONTEND=noninteractive \
- && apt update -y \
+ && apt update --fix-missing \
  && apt install --no-install-recommends -y gpg wget software-properties-common \
  && add-apt-repository --no-update -y ppa:git-core/ppa \
  && add-apt-repository --no-update -y ppa:ubuntu-toolchain-r/test \
@@ -30,11 +32,11 @@ deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitw
     # cuSpatial dependencies
     libgdal-dev \
  # Remove any existing gcc and g++ alternatives
- && update-alternatives --remove-all cc  >/dev/null 2>&1 \
- && update-alternatives --remove-all c++ >/dev/null 2>&1 \
- && update-alternatives --remove-all gcc >/dev/null 2>&1 \
- && update-alternatives --remove-all g++ >/dev/null 2>&1 \
- && update-alternatives --remove-all gcov >/dev/null 2>&1 \
+ && update-alternatives --remove-all cc  >/dev/null 2>&1 || true \
+ && update-alternatives --remove-all c++ >/dev/null 2>&1 || true \
+ && update-alternatives --remove-all gcc >/dev/null 2>&1 || true \
+ && update-alternatives --remove-all g++ >/dev/null 2>&1 || true \
+ && update-alternatives --remove-all gcov >/dev/null 2>&1 || true \
  && update-alternatives \
     --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} 100 \
     --slave /usr/bin/cc cc /usr/bin/gcc-${GCC_VERSION} \
@@ -51,8 +53,7 @@ deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitw
  && chmod +x /usr/bin/sccache \
  && cd / \
  # Clean up
- && apt autoremove -y \
- && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ && apt autoremove -y && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ENV CUDA_HOME="/usr/local/cuda"
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib:/usr/local/lib:/usr/local/cuda/lib:/usr/local/cuda/lib64"
