@@ -30,11 +30,11 @@ deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitw
     # cuSpatial dependencies
     libgdal-dev \
  # Remove any existing gcc and g++ alternatives
- && update-alternatives --remove-all cc  >/dev/null 2>&1 || true \
- && update-alternatives --remove-all c++ >/dev/null 2>&1 || true \
- && update-alternatives --remove-all gcc >/dev/null 2>&1 || true \
- && update-alternatives --remove-all g++ >/dev/null 2>&1 || true \
- && update-alternatives --remove-all gcov >/dev/null 2>&1 || true \
+ && update-alternatives --remove-all cc  >/dev/null 2>&1 \
+ && update-alternatives --remove-all c++ >/dev/null 2>&1 \
+ && update-alternatives --remove-all gcc >/dev/null 2>&1 \
+ && update-alternatives --remove-all g++ >/dev/null 2>&1 \
+ && update-alternatives --remove-all gcov >/dev/null 2>&1 \
  && update-alternatives \
     --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} 100 \
     --slave /usr/bin/cc cc /usr/bin/gcc-${GCC_VERSION} \
@@ -146,7 +146,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           -D DISABLE_OPENMP=OFF \
           -D ENABLE_CUMLPRIMS_MG=OFF \
           -D SINGLEGPU=ON \
- && cmake --build /opt/rapids/cuml/cpp/build -j${PARALLEL_LEVEL} -v || true \
+ && cmake --build /opt/rapids/cuml/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcugraph from source
  && git clone --depth 1 --branch "${CUGRAPH_BRANCH}" "${CUGRAPH_GIT_REPO}" /opt/rapids/cugraph \
@@ -156,7 +156,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
           -D rmm_ROOT=/opt/rapids/rmm/build \
           -D raft_ROOT=/opt/rapids/raft/cpp/build \
- && cmake --build /opt/rapids/cugraph/cpp/build -j${PARALLEL_LEVEL} -v || true \
+ && cmake --build /opt/rapids/cugraph/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcudf from source
  && git clone --depth 1 --branch "${CUDF_BRANCH}" "${CUDF_GIT_REPO}" /opt/rapids/cudf \
@@ -228,7 +228,7 @@ RUN rm -rf /opt/rapids/* \
           -D DISABLE_DEPRECATION_WARNINGS=ON \
           -D ENABLE_CUMLPRIMS_MG=OFF \
           -D SINGLEGPU=ON \
- && cmake --build /opt/rapids/cuml/cpp/build -j${PARALLEL_LEVEL} -v --target install || true \
+ && cmake --build /opt/rapids/cuml/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcugraph
  && git clone --depth 1 --branch "${CUGRAPH_BRANCH}" "${CUGRAPH_GIT_REPO}" /opt/rapids/cugraph \
@@ -236,7 +236,7 @@ RUN rm -rf /opt/rapids/* \
           -S /opt/rapids/cugraph/cpp \
           -B /opt/rapids/cugraph/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
- && cmake --build /opt/rapids/cugraph/cpp/build -j${PARALLEL_LEVEL} -v --target install || true \
+ && cmake --build /opt/rapids/cugraph/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcudf
  && git clone --depth 1 --branch "${CUDF_BRANCH}" "${CUDF_GIT_REPO}" /opt/rapids/cudf \
@@ -255,4 +255,4 @@ RUN rm -rf /opt/rapids/* \
           -B /opt/rapids/cuspatial/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
           -D DISABLE_DEPRECATION_WARNING=ON \
- && cmake --build /opt/rapids/cuspatial/cpp/build -j${PARALLEL_LEVEL} -v --target install || true
+ && cmake --build /opt/rapids/cuspatial/cpp/build -j${PARALLEL_LEVEL} -v --target install
