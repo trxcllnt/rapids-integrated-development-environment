@@ -70,7 +70,6 @@ ARG RAPIDS_CMAKE_COMMON_ARGS="\
 -D BUILD_TESTS=ON \
 -D BUILD_BENCHMARKS=ON \
 -D CMAKE_BUILD_TYPE=Release \
--D DISABLE_DEPRECATION_WARNING=ON \
 -D CMAKE_INSTALL_PREFIX=/usr/local \
 -D CMAKE_C_COMPILER_LAUNCHER=/usr/bin/sccache \
 -D CMAKE_CXX_COMPILER_LAUNCHER=/usr/bin/sccache \
@@ -101,6 +100,7 @@ ARG CUSPATIAL_GIT_REPO="https://github.com/rapidsai/cuspatial.git"
 
 RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
  && export SCCACHE_BUCKET="${SCCACHE_BUCKET}" \
+ && export SCCACHE_CACHE_SIZE="${SCCACHE_CACHE_SIZE}" \
  && export SCCACHE_IDLE_TIMEOUT="${SCCACHE_IDLE_TIMEOUT}" \
  && export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \
  && export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
@@ -111,6 +111,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           -S /opt/rapids/rmm \
           -B /opt/rapids/rmm/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
+          -D DISABLE_DEPRECATION_WARNING=ON \
  && cmake --build /opt/rapids/rmm/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libraft from source
@@ -121,6 +122,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
           -D BUILD_TESTS=OFF \
           -D BUILD_BENCHMARKS=OFF \
+          -D DISABLE_DEPRECATION_WARNINGS=ON \
  && cmake --build /opt/rapids/raft/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcuml from source
@@ -140,6 +142,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           -D BUILD_CUML_TESTS=ON \
           -D BUILD_PRIMS_TESTS=OFF \
           -D DETECT_CONDA_ENV=OFF \
+          -D DISABLE_DEPRECATION_WARNINGS=ON \
           -D DISABLE_OPENMP=OFF \
           -D ENABLE_CUMLPRIMS_MG=OFF \
           -D SINGLEGPU=ON \
@@ -161,9 +164,9 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           -S /opt/rapids/cudf/cpp \
           -B /opt/rapids/cudf/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
-          -D rmm_ROOT=/opt/rapids/rmm/build \
           -D CUDF_ENABLE_ARROW_S3=OFF \
-          -D CUDA_TOOLKIT_ROOT_DIR="$CUDA_HOME" \
+          -D DISABLE_DEPRECATION_WARNING=ON \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
  && cmake --build /opt/rapids/cudf/cpp/build -j${PARALLEL_LEVEL} -v \
  \
  # Build libcuspatial from source
@@ -172,6 +175,7 @@ RUN export SCCACHE_REGION="${SCCACHE_REGION}" \
           -S /opt/rapids/cuspatial/cpp \
           -B /opt/rapids/cuspatial/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
+          -D DISABLE_DEPRECATION_WARNING=ON \
           -D rmm_ROOT=/opt/rapids/rmm/build \
           -D cudf_ROOT=/opt/rapids/cudf/cpp/build \
  && cmake --build /opt/rapids/cuspatial/cpp/build -j${PARALLEL_LEVEL} -v
@@ -191,6 +195,7 @@ RUN rm -rf /opt/rapids/* \
           -S /opt/rapids/rmm \
           -B /opt/rapids/rmm/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
+          -D DISABLE_DEPRECATION_WARNING=ON \
  && cmake --build /opt/rapids/rmm/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libraft
@@ -201,6 +206,7 @@ RUN rm -rf /opt/rapids/* \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
           -D BUILD_TESTS=OFF \
           -D BUILD_BENCHMARKS=OFF \
+          -D DISABLE_DEPRECATION_WARNINGS=ON \
  && cmake --build /opt/rapids/raft/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcuml
@@ -219,6 +225,7 @@ RUN rm -rf /opt/rapids/* \
           -D BUILD_PRIMS_TESTS=OFF \
           -D DETECT_CONDA_ENV=OFF \
           -D DISABLE_OPENMP=OFF \
+          -D DISABLE_DEPRECATION_WARNINGS=ON \
           -D ENABLE_CUMLPRIMS_MG=OFF \
           -D SINGLEGPU=ON \
  && cmake --build /opt/rapids/cuml/cpp/build -j${PARALLEL_LEVEL} -v --target install || true \
@@ -238,7 +245,7 @@ RUN rm -rf /opt/rapids/* \
           -B /opt/rapids/cudf/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
           -D CUDF_ENABLE_ARROW_S3=OFF \
-          -D CUDA_TOOLKIT_ROOT_DIR="$CUDA_HOME" \
+          -D DISABLE_DEPRECATION_WARNING=ON \
  && cmake --build /opt/rapids/cudf/cpp/build -j${PARALLEL_LEVEL} -v --target install \
  \
  # Build and install libcuspatial
@@ -247,4 +254,5 @@ RUN rm -rf /opt/rapids/* \
           -S /opt/rapids/cuspatial/cpp \
           -B /opt/rapids/cuspatial/cpp/build \
           ${RAPIDS_CMAKE_COMMON_ARGS} \
+          -D DISABLE_DEPRECATION_WARNING=ON \
  && cmake --build /opt/rapids/cuspatial/cpp/build -j${PARALLEL_LEVEL} -v --target install || true
