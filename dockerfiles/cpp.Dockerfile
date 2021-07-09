@@ -47,8 +47,8 @@ deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitw
  && curl -o /tmp/sccache.tar.gz \
          -L "https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION/sccache-v$SCCACHE_VERSION-$(uname -m)-unknown-linux-musl.tar.gz" \
  && tar -C /tmp -xvf /tmp/sccache.tar.gz \
- && mv "/tmp/sccache-v$SCCACHE_VERSION-$(uname -m)-unknown-linux-musl/sccache" /bin/sccache \
- && chmod +x /bin/sccache \
+ && mv "/tmp/sccache-v$SCCACHE_VERSION-$(uname -m)-unknown-linux-musl/sccache" /usr/bin/sccache \
+ && chmod +x /usr/bin/sccache \
  && cd / \
  # Clean up
  && apt autoremove -y \
@@ -78,22 +78,22 @@ ARG RAPIDS_CMAKE_COMMON_ARGS="\
 
 ARG RAPIDS_VERSION=21.08
 
-ARG RMM_BRANCH=branch-21.08
+ARG RMM_BRANCH="branch-${RAPIDS_VERSION}"
 ARG RMM_GIT_REPO="https://github.com/rapidsai/rmm.git"
 
-ARG RAFT_BRANCH=branch-21.08
+ARG RAFT_BRANCH="branch-${RAPIDS_VERSION}"
 ARG RAFT_GIT_REPO="https://github.com/rapidsai/raft.git"
 
-ARG CUDF_BRANCH=branch-21.08
+ARG CUDF_BRANCH="branch-${RAPIDS_VERSION}"
 ARG CUDF_GIT_REPO="https://github.com/rapidsai/cudf.git"
 
-ARG CUML_BRANCH=branch-21.08
+ARG CUML_BRANCH="branch-${RAPIDS_VERSION}"
 ARG CUML_GIT_REPO="https://github.com/rapidsai/cuml.git"
 
-ARG CUGRAPH_BRANCH=branch-21.08
+ARG CUGRAPH_BRANCH="branch-${RAPIDS_VERSION}"
 ARG CUGRAPH_GIT_REPO="https://github.com/rapidsai/cugraph.git"
 
-ARG CUSPATIAL_BRANCH=branch-21.08
+ARG CUSPATIAL_BRANCH="branch-${RAPIDS_VERSION}"
 ARG CUSPATIAL_GIT_REPO="https://github.com/rapidsai/cuspatial.git"
 
 # Step 1. Build the RAPIDS C++ projects against each other (no install)
