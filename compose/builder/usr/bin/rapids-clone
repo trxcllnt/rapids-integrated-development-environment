@@ -1,0 +1,22 @@
+#! /usr/bin/env -S bash -Eeo pipefail
+
+URL=
+BRANCH=
+PROJECT=
+VERSION=
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --url) URL="$2"; shift;;
+        --branch) BRANCH="$2"; shift;;
+        --project) PROJECT="$2"; shift;;
+        --version) VERSION="$2"; shift;;
+        *) break;;
+    esac; shift;
+done
+
+VERSION=${VERSION:-21.12}
+BRANCH=${BRANCH:-"branch-${VERSION}"}
+URL=${URL:-"https://github.com/rapidsai/$PROJECT.git"}
+
+git clone --depth 1 --branch "${BRANCH}" "${URL}" /opt/rapids/$PROJECT

@@ -1,0 +1,12 @@
+#! /usr/bin/env -S bash -Eeo pipefail
+
+add-apt-repository --remove -y ppa:git-core/ppa
+add-apt-repository --remove -y ppa:ubuntu-toolchain-r/test
+
+apt remove -y \
+    automake autoconf libtool \
+    software-properties-common
+
+apt autoremove -y && apt clean
+
+rm -rf /tmp/* /opt/bin /usr/local/src/*.tar.gz /var/tmp/*

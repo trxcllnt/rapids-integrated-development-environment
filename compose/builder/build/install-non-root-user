@@ -1,0 +1,28 @@
+#! /usr/bin/env -S bash -Eeo pipefail
+
+#######################################################
+# Add non-root `rapids` user with passwordless sudo
+#######################################################
+adduser \
+    --gecos '' \
+    --shell /bin/bash \
+    --home /opt/rapids \
+    --disabled-password rapids
+
+echo "rapids ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd
+
+#######################################################
+# Install fixuid
+# https://github.com/boxboat/fixuid#install-fixuid-in-dockerfile
+#######################################################
+tar -C /usr/bin -xf /usr/local/src/fixuid.tar.gz
+chown root:root /usr/bin/fixuid
+chmod 4755 /usr/bin/fixuid
+mkdir -p /etc/fixuid
+
+cat << EOF > /etc/fixuid/config.yml
+user: rapids
+group: rapids
+paths:
+  - /opt/rapids
+EOF

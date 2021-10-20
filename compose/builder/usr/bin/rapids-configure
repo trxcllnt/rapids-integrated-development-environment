@@ -1,0 +1,21 @@
+#! /usr/bin/env -S bash -Eeo pipefail
+
+PROJECT=
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --project) PROJECT="$2"; shift;;
+        *) break;;
+    esac; shift;
+done
+
+CPP_DIR="$PROJECT"
+
+if [[ -d "$PROJECT/cpp" ]]; then
+    CPP_DIR="$PROJECT/cpp"
+fi
+
+cmake -GNinja \
+      -S /opt/rapids/$CPP_DIR \
+      -B /opt/rapids/$CPP_DIR/build \
+      ${@}

@@ -1,0 +1,3 @@
+#! /usr/bin/env -S bash -Eeo pipefail
+
+ln -s /usr/bin/sccache-gcc /usr/local/bin/gcc

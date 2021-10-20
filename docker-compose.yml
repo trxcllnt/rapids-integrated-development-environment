@@ -3,15 +3,40 @@ version: "3.8"
 x-common-service-settings: &common_service_settings
   env_file: .env
   tty: true
-  network_mode: "host"
   working_dir: "/opt/rapids"
   build: &common_build_settings
     context: .
     args: &common_build_args
       UID: ${UID:-1000}
+      GCC_VERSION: "${GCC_VERSION:-9}"
+      SCCACHE_VERSION: "${SCCACHE_VERSION:-0.2.15}"
+      BUILD_TESTS: "${BUILD_TESTS:-ON}"
+      BUILD_BENCH: "${BUILD_BENCH:-ON}"
+      PARALLEL_LEVEL: "${PARALLEL_LEVEL:-4}"
+      CMAKE_CUDA_ARCHITECTURES: "${CMAKE_CUDA_ARCHITECTURES:-ALL}"
+      SCCACHE_REGION: "${SCCACHE_REGION:-}"
+      SCCACHE_BUCKET: "${SCCACHE_BUCKET:-}"
+      SCCACHE_SERVER_PORT: "${SCCACHE_SERVER_PORT:-4226}"
+      SCCACHE_IDLE_TIMEOUT: "${SCCACHE_IDLE_TIMEOUT:-32768}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
+      RAPIDS_VERSION: "${RAPIDS_VERSION:-21.12}"
+      RMM_BRANCH: "${RMM_BRANCH:-branch-21.12}"
+      RMM_GIT_REPO: "${RMM_GIT_REPO:-https://github.com/rapidsai/rmm.git}"
+      RAFT_BRANCH: "${RAFT_BRANCH:-branch-21.12}"
+      RAFT_GIT_REPO: "${RAFT_GIT_REPO:-https://github.com/rapidsai/raft.git}"
+      CUDF_BRANCH: "${CUDF_BRANCH:-branch-21.12}"
+      CUDF_GIT_REPO: "${CUDF_GIT_REPO:-https://github.com/rapidsai/cudf.git}"
+      CUML_BRANCH: "${CUML_BRANCH:-branch-21.12}"
+      CUML_GIT_REPO: "${CUML_GIT_REPO:-https://github.com/rapidsai/cuml.git}"
+      CUGRAPH_BRANCH: "${CUGRAPH_BRANCH:-branch-21.12}"
+      CUGRAPH_GIT_REPO: "${CUGRAPH_GIT_REPO:-https://github.com/rapidsai/cugraph.git}"
+      CUSPATIAL_BRANCH: "${CUSPATIAL_BRANCH:-branch-21.12}"
+      CUSPATIAL_GIT_REPO: "${CUSPATIAL_GIT_REPO:-https://github.com/rapidsai/cuspatial.git}"
   environment: &common_environment_variables
-    LIBCUDF_KERNEL_CACHE_PATH: "/opt/rapids/.cache/jit"
-  deploy:
+    # Colorize the terminal in the container if possible
+    TERM: "${TERM:-}"
+  deploy: &with_gpu
     resources:
       reservations:
         devices:
@@ -19,21 +44,39 @@ x-common-service-settings: &common_service_settings
             - gpu
 
 services:
+
+  vscode:
+    image: pauletaylor/rapids-ide-vscode:latest
+    build:
+      context: compose/vscode
+    environment:
+      <<: *common_environment_variables
+
+  builder:
+    image: pauletaylor/rapids-ide-builder:cuda${CUDA_VERSION:-11.4.2}-ubuntu20.04
+    build:
+      context: compose/builder
+      args:
+        GCC_VERSION: ${GCC_VERSION:-9}
+        UXC_VERSION: ${UXC_VERSION:-1.11}
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.4.2}-base-ubuntu20.04
+        CUDA_DEVEL: nvidia/cuda:${CUDA_VERSION:-11.4.2}-devel-ubuntu20.04
+    deploy:
+      <<: *with_gpu
+    environment:
+      <<: *common_environment_variables
+      NVIDIA_DRIVER_CAPABILITIES: all
+
   cpp:
     <<: *common_service_settings
-    image: rapidsai/cpp/ci:${RAPIDS_VERSION:-latest}-cuda${CUDA_VERSION:-11.2.2}-devel-${LINUX_VERSION:-ubuntu20.04}-amd64
+    image: rapidsai/cpp/ci:${RAPIDS_VERSION:-21.12.00}-cuda${CUDA_VERSION:-11.4.2}-devel-ubuntu20.04-amd64
     build:
       <<: *common_build_settings
       dockerfile: dockerfiles/cpp.Dockerfile
       args:
         <<: *common_build_args
-        GCC_VERSION: "${GCC_VERSION:-9}"
-        SCCACHE_VERSION: "${SCCACHE_VERSION:-0.2.15}"
-        PARALLEL_LEVEL: "${PARALLEL_LEVEL:-4}"
-        SCCACHE_REGION: "${SCCACHE_REGION:-}"
-        SCCACHE_BUCKET: "${SCCACHE_BUCKET:-}"
-        SCCACHE_CACHE_SIZE: "${SCCACHE_BUCKET:-100G}"
-        SCCACHE_IDLE_TIMEOUT: "${SCCACHE_IDLE_TIMEOUT:-32768}"
-        AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
-        AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.2.2}-devel-${LINUX_VERSION:-ubuntu20.04}
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.4.2}-devel-ubuntu20.04
+    environment:
+      <<: *common_environment_variables
+      NVIDIA_DRIVER_CAPABILITIES: all
+      LIBCUDF_KERNEL_CACHE_PATH: "/opt/rapids/.cache/jit"
