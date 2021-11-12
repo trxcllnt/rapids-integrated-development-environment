@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.3
+
 ARG BASE_IMAGE=nvidia/cuda:11.4.2-base-ubuntu20.04
 ARG CUDA_DEVEL=nvidia/cuda:11.4.2-devel-ubuntu20.04
 

@@ -1,0 +1,75 @@
+#! /usr/bin/env -S bash -Eeo pipefail
+
+#######################################################
+# Update SSL certs
+#######################################################
+apt update
+apt install -y --no-install-recommends \
+    gpg gnupg libssl-dev ca-certificates \
+ && update-ca-certificates
+
+#######################################################
+# Install apt repos
+#######################################################
+apt install -y --no-install-recommends \
+    software-properties-common \
+    apt-utils apt-transport-https \
+    wget curl libcurl4-openssl-dev
+
+# Install llvm apt repository
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+
+cat << EOF > /etc/apt/sources.list.d/llvm-${LLVM_VERSION}.list
+deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-${LLVM_VERSION} main
+deb-src  http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-${LLVM_VERSION} main
+EOF
+
+#######################################################
+# Install dependencies
+#######################################################
+apt update
+apt install -y --no-install-recommends       \
+    git                                      \
+    `# gdb and lldb for debugging`           \
+    gdb                                      \
+    lldb-${LLVM_VERSION}                     \
+    libllvm${LLVM_VERSION}                   \
+    `# clangd for C++ intellisense`          \
+    clangd-${LLVM_VERSION}                   \
+    `# clang-tidy for C++ linting`           \
+    clang-tidy-${LLVM_VERSION}               \
+    `# clang-format for C++ auto-formatting` \
+    clang-format-${LLVM_VERSION}             \
+    `# need these for docker-in-docker`      \
+    pigz iptables openssl xz-utils
+
+#######################################################
+# Install update-alternatives links
+#######################################################
+# Set alternatives for clangd
+(update-alternatives --remove-all clangd >/dev/null 2>&1 || true)
+update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-${LLVM_VERSION} ${LLVM_VERSION}
+
+# Set clangd-${LLVM_VERSION} as the default clangd
+update-alternatives --set clangd /usr/bin/clangd-${LLVM_VERSION}
+
+# Set alternatives for clang-tidy
+(update-alternatives --remove-all clang-tidy >/dev/null 2>&1 || true)
+update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${LLVM_VERSION} ${LLVM_VERSION}
+
+# Set alternatives for clang-format
+(update-alternatives --remove-all clang-format >/dev/null 2>&1 || true)
+update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${LLVM_VERSION} ${LLVM_VERSION}
+
+# Set clang-format-${LLVM_VERSION} as the default clang-format
+update-alternatives --set clang-format /usr/bin/clang-format-${LLVM_VERSION}
+
+# Set alternatives for lldb and llvm-config so it's in the path for llnode
+(update-alternatives --remove-all lldb >/dev/null 2>&1 || true)
+(update-alternatives --remove-all llvm-config >/dev/null 2>&1 || true)
+update-alternatives \
+    --install /usr/bin/lldb lldb /usr/bin/lldb-${LLVM_VERSION} ${LLVM_VERSION} \
+    --slave /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${LLVM_VERSION}
+
+# Set lldb-${LLVM_VERSION} as the default lldb, llvm-config-${LLVM_VERSION} as default llvm-config
+update-alternatives --set lldb /usr/bin/lldb-${LLVM_VERSION}

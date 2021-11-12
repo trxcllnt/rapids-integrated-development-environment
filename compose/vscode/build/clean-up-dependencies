@@ -1,0 +1,6 @@
+#! /usr/bin/env -S bash -Eeo pipefail
+
+apt remove -y \
+    software-properties-common
+
+apt autoremove -y && apt clean

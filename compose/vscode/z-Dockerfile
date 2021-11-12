@@ -1,0 +1,91 @@
+# syntax=docker/dockerfile:1.3
+
+FROM codercom/code-server:latest
+
+USER root
+
+ARG LLVM_VERSION=11
+
+SHELL ["/bin/bash", "-c"]
+
+COPY --chown=root:root build/* /opt/bin/
+
+RUN --mount=type=cache,target=/var/lib/apt \
+    --mount=type=cache,target=/var/cache/apt \
+    export DEBIAN_FRONTEND=noninteractive \
+ && export LLVM_VERSION=${LLVM_VERSION} \
+ && PATH="$PATH:/opt/bin" \
+ && install-dependencies  \
+ && clean-up-dependencies \
+ # Clean up layer
+ && rm -rf /tmp/* /var/tmp/* /opt/bin /usr/local/src/*.tar.gz
+
+ENV DOCKER_TLS_CERTDIR=/certs
+RUN mkdir /certs /certs/client && chmod 1777 /certs /certs/client
+
+COPY --from=docker:20-dind /usr/local/bin/ /usr/local/bin/
+
+VOLUME /var/lib/docker
+
+# ENTRYPOINT ["dockerd-entrypoint.sh"]
+# ENTRYPOINT ["/usr/bin/entrypoint.sh", "--bind-addr", "0.0.0.0:8080", "."]
+# ENTRYPOINT ["/usr/local/bin/dockerd-entrypoint.sh", "/usr/bin/entrypoint.sh", "--bind-addr", "0.0.0.0:8080", "."]
+
+USER 1000
+
+# RUN export DEBIAN_FRONTEND=noninteractive \
+#  && apt update \
+#  && apt install -y gpg gnupg wget \
+#  # Install toolchain apt source
+#  && echo 'deb http://deb.debian.org/debian testing main' >> /etc/apt/sources.list.d/toolchain.list \
+#  \
+#  # Install LLVM apt sources
+#  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
+#  && bash -c 'echo -e "\
+# deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-${LLVM_VERSION} main\n\
+# deb-src  http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-${LLVM_VERSION} main\n\
+# " | tee /etc/apt/sources.list.d/llvm-${LLVM_VERSION}.list >/dev/null' \
+#  \
+#  && apt update \
+#  && apt install -y \
+#     # gdb and lldb for debugging
+#     gdb lldb-${LLVM_VERSION} libllvm${LLVM_VERSION} \
+#     # clangd for C++ intellisense
+#     clangd-${LLVM_VERSION} \
+#     # clang-tidy for C++ linting
+#     clang-tidy-${LLVM_VERSION} \
+#     # clang-format for C++ auto-formatting
+#     clang-format-${LLVM_VERSION} \
+#  \
+#  # Set alternatives for clangd
+#  && (update-alternatives --remove-all clangd >/dev/null 2>&1 || true) \
+#  && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-${LLVM_VERSION} 100 \
+#  # Set clangd-${LLVM_VERSION} as the default clangd
+#  && update-alternatives --set clangd /usr/bin/clangd-${LLVM_VERSION} \
+#  # Set alternatives for clang-tidy
+#  && (update-alternatives --remove-all clang-tidy >/dev/null 2>&1 || true) \
+#  && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${LLVM_VERSION} 100 \
+#  # Set alternatives for clang-format
+#  && (update-alternatives --remove-all clang-format >/dev/null 2>&1 || true) \
+#  && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${LLVM_VERSION} 100 \
+#  # Set clang-format-${LLVM_VERSION} as the default clang-format
+#  && update-alternatives --set clang-format /usr/bin/clang-format-${LLVM_VERSION} \
+#  # Set alternatives for lldb and llvm-config so it's in the path for llnode
+#  && (update-alternatives --remove-all lldb >/dev/null 2>&1 || true) \
+#  && (update-alternatives --remove-all llvm-config >/dev/null 2>&1 || true) \
+#  && update-alternatives \
+#     --install /usr/bin/lldb lldb /usr/bin/lldb-${LLVM_VERSION} 100 \
+#     --slave /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-${LLVM_VERSION} \
+#  # Set lldb-${LLVM_VERSION} as the default lldb, llvm-config-${LLVM_VERSION} as default llvm-config
+#  && update-alternatives --set lldb /usr/bin/lldb-${LLVM_VERSION} \
+#  \
+#  # Clean up
+#  && apt autoremove -y && apt clean \
+#  && rm -rf \
+#     /tmp/* \
+#     /var/tmp/* \
+#     /var/lib/apt/lists/* \
+#     /etc/apt/sources.list.d/toolchain.list \
+#     /etc/apt/sources.list.d/llvm-${LLVM_VERSION}.list
+
+# USER 1000
