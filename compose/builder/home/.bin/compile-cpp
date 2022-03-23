@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+BINARY_DIR="$(cpp-binary-dir ${@})"
+
+if [[ -d "$BINARY_DIR" ]]; then
+    cmake --build "$BINARY_DIR" -v -- -j${PARALLEL_LEVEL:-1} all
+fi

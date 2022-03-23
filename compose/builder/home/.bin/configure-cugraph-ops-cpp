@@ -1,0 +1,24 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
+CUDA_KERNELINFO=${CUDA_KERNELINFO:-OFF}
+
+configure-cpp \
+    --project=cugraph-ops \
+    --url="${CUGRAPH_OPS_URL:-}" \
+    --out="${CUGRAPH_OPS_OUT:-}" \
+    --branch="${CUGRAPH_OPS_BRANCH:-}" \
+    -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \
+    -D raft_ROOT="$(cpp-binary-dir --project=raft)" \
+    \
+    -D DETECT_CONDA_ENV=OFF \
+    \
+    -D BUILD_CUGRAPH_OPS_CPP_TESTS=${BUILD_TESTS} \
+    \
+    -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
+    -D CUDA_ENABLE_KERNELINFO=${CUDA_KERNELINFO} \
+    \
+    ${@};

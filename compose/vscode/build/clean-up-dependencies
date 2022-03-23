@@ -4,3 +4,5 @@ apt remove -y \
     software-properties-common
 
 apt autoremove -y && apt clean
+
+rm -rf /tmp/* /var/tmp/*

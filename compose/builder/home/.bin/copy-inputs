@@ -1,0 +1,35 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+URL=
+BRANCH=
+PROJECT=
+VERSION=
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --url=*) URL="${1#--url=}";;
+        --branch=*) BRANCH="${1#--branch=}";;
+        --project=*) PROJECT="${1#--project=}";;
+        --version=*) VERSION="${1#--version=}";;
+        *) ;;
+    esac; shift;
+done
+
+VERSION=${VERSION:-22.04}
+BRANCH=${BRANCH:-"branch-$VERSION"}
+URL=${URL:-"https://github.com/rapidsai/$PROJECT.git"}
+
+if [[ ! -d "/opt/rapids/$PROJECT" ]]; then
+    gh_url='^https://github.com/';
+    if [[ "$URL" =~ $gh_url && -n "$GH_TOKEN" ]]; then
+        URL="https://${GH_TOKEN}@github.com/${URL#https://github.com/}";
+    fi
+    git clone \
+        --depth 1 \
+        --branch="${BRANCH}" \
+        --recurse-submodules \
+        -j${PARALLEL_LEVEL:-1} \
+        "${URL}" "/opt/rapids/$PROJECT"
+fi

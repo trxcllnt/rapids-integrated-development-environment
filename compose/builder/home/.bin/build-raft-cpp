@@ -1,0 +1,15 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+ARGS="\
+    --project=raft \
+    --url=${RAFT_URL:-} \
+    --out=${RAFT_OUT:-} \
+    --branch=${RAFT_BRANCH:-} \
+    --version=${RAFT_VERSION:-}"
+
+copy-inputs ${ARGS} \
+ && configure-raft-cpp ${@} \
+ && compile-cpp ${ARGS} \
+ && copy-output ${ARGS}

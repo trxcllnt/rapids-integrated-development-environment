@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+build-rmm-cpp
+build-cudf-cpp
+build-raft-cpp
+build-cumlprims_mg-cpp
+build-cuml-cpp
+build-cugraph-ops-cpp
+build-cugraph-cpp
+build-cuspatial-cpp

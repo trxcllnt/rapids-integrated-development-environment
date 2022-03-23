@@ -11,29 +11,32 @@ x-run-with-gpu: &run_with_gpu
 services:
 
   builder:
-    image: pauletaylor/rapids-ide-builder:cuda${CUDA_VERSION:-11.4.2}-ubuntu20.04
+    image: pauletaylor/rapids-ide-builder:cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     build:
       context: compose/builder
       args:
         GCC_VERSION: ${GCC_VERSION:-9}
         UXC_VERSION: ${UXC_VERSION:-1.11}
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.4.2}-base-ubuntu20.04
-        CUDA_DEVEL: nvidia/cuda:${CUDA_VERSION:-11.4.2}-devel-ubuntu20.04
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04
+    env_file: .env
     environment:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
       NVIDIA_DRIVER_CAPABILITIES: all
+    volumes:
+      - "./compose/builder/home/.bin:/opt/rapids/.bin:ro"
     <<: *run_with_gpu
 
   vscode:
     image: pauletaylor/rapids-ide-vscode:latest
     build:
       context: compose/vscode
+    env_file: .env
     environment:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
     volumes:
-      - ".config:/home/coder/.config"
+      - "./compose/builder/home/.config:/home/coder/.config"
       - "/var/run/docker.sock:/var/run/docker.sock"
     ports:
       - "8080:8080"
@@ -43,7 +46,7 @@ services:
     tty: true
     env_file: .env
     working_dir: "/opt/rapids"
-    image: rapidsai/cpp/ci:${RAPIDS_VERSION:-21.12.00}-cuda${CUDA_VERSION:-11.4.2}-devel-ubuntu20.04-amd64
+    image: rapidsai/cpp/ci:${RAPIDS_VERSION:-22.02.00}-cuda${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04-amd64
     build:
       context: .
       dockerfile: dockerfiles/cpp.Dockerfile
@@ -60,20 +63,20 @@ services:
         SCCACHE_IDLE_TIMEOUT: "${SCCACHE_IDLE_TIMEOUT:-32768}"
         AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
         AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
-        RAPIDS_VERSION: "${RAPIDS_VERSION:-21.12}"
-        RMM_BRANCH: "${RMM_BRANCH:-branch-21.12}"
+        RAPIDS_VERSION: "${RAPIDS_VERSION:-22.02}"
+        RMM_BRANCH: "${RMM_BRANCH:-branch-22.02}"
         RMM_GIT_REPO: "${RMM_GIT_REPO:-https://github.com/rapidsai/rmm.git}"
-        RAFT_BRANCH: "${RAFT_BRANCH:-branch-21.12}"
+        RAFT_BRANCH: "${RAFT_BRANCH:-branch-22.02}"
         RAFT_GIT_REPO: "${RAFT_GIT_REPO:-https://github.com/rapidsai/raft.git}"
-        CUDF_BRANCH: "${CUDF_BRANCH:-branch-21.12}"
+        CUDF_BRANCH: "${CUDF_BRANCH:-branch-22.02}"
         CUDF_GIT_REPO: "${CUDF_GIT_REPO:-https://github.com/rapidsai/cudf.git}"
-        CUML_BRANCH: "${CUML_BRANCH:-branch-21.12}"
+        CUML_BRANCH: "${CUML_BRANCH:-branch-22.02}"
         CUML_GIT_REPO: "${CUML_GIT_REPO:-https://github.com/rapidsai/cuml.git}"
-        CUGRAPH_BRANCH: "${CUGRAPH_BRANCH:-branch-21.12}"
+        CUGRAPH_BRANCH: "${CUGRAPH_BRANCH:-branch-22.02}"
         CUGRAPH_GIT_REPO: "${CUGRAPH_GIT_REPO:-https://github.com/rapidsai/cugraph.git}"
-        CUSPATIAL_BRANCH: "${CUSPATIAL_BRANCH:-branch-21.12}"
+        CUSPATIAL_BRANCH: "${CUSPATIAL_BRANCH:-branch-22.02}"
         CUSPATIAL_GIT_REPO: "${CUSPATIAL_GIT_REPO:-https://github.com/rapidsai/cuspatial.git}"
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.4.2}-devel-ubuntu20.04
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04
     environment:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"

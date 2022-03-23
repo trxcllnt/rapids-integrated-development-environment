@@ -1,0 +1,24 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+OUT_DIR=
+BIN_DIR="$(cpp-binary-dir ${@})"
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --out=*) OUT_DIR="${1#--out=}";;
+        *) ;;
+    esac; shift;
+done
+
+if [[ -d "$OUT_DIR" ]]; then
+    rm -rf "$OUT_DIR"/*
+    cp -r "$BIN_DIR/*" "$OUT_DIR/"
+    if [[ -f "$OUT_DIR/compile_commands.json" ]]; then
+        cat "$BIN_DIR/compile_commands.json"              \
+        | sed -r "s@$BIN_DIR@$OUT_DIR@g"                  \
+        | sed -r "s@/usr/local/nvidia@$/usr/local/cuda@g" \
+          > "$OUT_DIR/compile_commands.json"
+    fi
+fi

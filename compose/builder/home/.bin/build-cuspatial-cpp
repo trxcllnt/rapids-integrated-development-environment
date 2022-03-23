@@ -1,0 +1,15 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+ARGS="\
+    --project=cuspatial \
+    --url=${CUSPATIAL_URL:-} \
+    --out=${CUSPATIAL_OUT:-} \
+    --branch=${CUSPATIAL_BRANCH:-} \
+    --version=${CUSPATIAL_VERSION:-}"
+
+copy-inputs ${ARGS} \
+ && configure-cuspatial-cpp ${@} \
+ && compile-cpp ${ARGS} \
+ && copy-output ${ARGS}

@@ -1,0 +1,15 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+ARGS="\
+    --project=cuml \
+    --url=${CUML_URL:-} \
+    --out=${CUML_OUT:-} \
+    --branch=${CUML_BRANCH:-} \
+    --version=${CUML_VERSION:-}"
+
+copy-inputs ${ARGS} \
+ && configure-cuml-cpp ${@} \
+ && compile-cpp ${ARGS} \
+ && copy-output ${ARGS}

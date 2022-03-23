@@ -1,4 +1,6 @@
-#! /usr/bin/env -S bash -Eeo pipefail
+#! /usr/bin/env bash
+
+set -Eeo pipefail
 
 #######################################################
 # Add non-root `rapids` user with passwordless sudo

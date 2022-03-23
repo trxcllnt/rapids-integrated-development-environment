@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+clean-rmm-cpp
+clean-cudf-cpp
+clean-raft-cpp
+clean-cumlprims_mg-cpp
+clean-cuml-cpp
+clean-cugraph-ops-cpp
+clean-cugraph-cpp
+clean-cuspatial-cpp

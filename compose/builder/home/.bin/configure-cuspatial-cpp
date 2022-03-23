@@ -1,0 +1,25 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+BUILD_BENCH=${BUILD_BENCH:-OFF}
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
+DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
+
+configure-cpp \
+    --project=cuspatial \
+    --url="${CUSPATIAL_URL:-}" \
+    --out="${CUSPATIAL_OUT:-}" \
+    --branch="${CUSPATIAL_BRANCH:-}" \
+    \
+    -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \
+    -D cudf_ROOT="$(cpp-binary-dir --project=cudf)" \
+    \
+    -D BUILD_TESTS=${BUILD_TESTS} \
+    -D BUILD_BENCHMARKS=${BUILD_BENCH} \
+    -D DISABLE_DEPRECATION_WARNING=${DISABLE_DEPRECATION_WARNINGS} \
+    \
+    -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
+    \
+    ${@};

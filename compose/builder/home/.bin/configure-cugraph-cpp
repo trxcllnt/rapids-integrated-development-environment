@@ -1,0 +1,23 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
+
+configure-cpp \
+    --project=cugraph \
+    --url="${CUGRAPH_URL:-}" \
+    --out="${CUGRAPH_OUT:-}" \
+    --branch="${CUGRAPH_BRANCH:-}" \
+    \
+    -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \
+    -D raft_ROOT="$(cpp-binary-dir --project=raft)" \
+    -D cugraph-ops_ROOT="$(cpp-binary-dir --project=cugraph-ops)" \
+    \
+    -D BUILD_TESTS=${BUILD_TESTS} \
+    -D BUILD_CUGRAPH_MG_TESTS=${BUILD_TESTS} \
+    \
+    -D CMAKE_CUDA_LINEINFO=${CUDA_LINEINFO} \
+    \
+    ${@};

@@ -1,0 +1,15 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+ARGS="\
+    --project=cugraph-ops \
+    --url=${CUGRAPH_OPS_URL:-} \
+    --out=${CUGRAPH_OPS_OUT:-} \
+    --branch=${CUGRAPH_OPS_BRANCH:-} \
+    --version=${CUGRAPH_OPS_VERSION:-}"
+
+copy-inputs ${ARGS} \
+ && configure-cugraph-ops-cpp ${@} \
+ && compile-cpp ${ARGS} \
+ && copy-output ${ARGS}

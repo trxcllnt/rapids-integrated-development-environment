@@ -1,4 +1,6 @@
-#! /usr/bin/env -S bash -Eeo pipefail
+#! /usr/bin/env bash
+
+set -Eeo pipefail
 
 #######################################################
 # Update SSL certs
@@ -34,22 +36,25 @@ add-apt-repository --no-update -y ppa:ubuntu-toolchain-r/test
 # Install dependencies
 #######################################################
 apt update
-apt install -y --no-install-recommends       \
-    `# JDK for cuDF Java`                    \
-    git sudo locales maven openjdk-11-jdk    \
-    `# C++ build tools`                      \
-    automake autoconf libtool                \
-    {gcc,g++}-${GCC_VERSION}                 \
-    make cmake doxygen ninja-build           \
-    `# cuSpatial dependencies`               \
-    libgdal-dev                              \
-    `# cuML/cuGraph/FAISS dependencies`      \
-    libblas-dev liblapack-dev                \
-    `# UCX dependencies`                     \
-    libibverbs-dev librdmacm-dev libnuma-dev \
-    `# Arrow (cuDF) dependencies`            \
-    protobuf-compiler                        \
-    zlib1g-dev libzstd-dev liblz4-dev        \
+apt install -y --no-install-recommends          \
+    git sudo nano locales                       \
+    `# JDK for cuDF Java`                       \
+    maven openjdk-11-jdk                        \
+    `# C++ build tools`                         \
+    automake autoconf libtool                   \
+    {gcc,g++}-${GCC_VERSION}                    \
+    make cmake doxygen ninja-build              \
+    `# cuSpatial dependencies`                  \
+    libgdal26 libgdal-dev                       \
+    `# cuML/cuGraph multi-gpu dependencies`     \
+    libopenmpi3 libopenmpi-dev                  \
+    `# cuML/cuGraph/FAISS dependencies`         \
+    libblas-dev liblapack-dev                   \
+    `# UCX dependencies`                        \
+    libibverbs-dev librdmacm-dev libnuma-dev    \
+    `# Arrow (cuDF) dependencies`               \
+    protobuf-compiler                           \
+    zlib1g-dev libzstd-dev liblz4-dev           \
     libboost-{regex,system,filesystem}-dev
 
 # Remove any existing gcc and g++ alternatives

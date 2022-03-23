@@ -1,0 +1,19 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+BUILD_BENCH=${BUILD_BENCH:-OFF}
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
+
+configure-cpp \
+    --project=rmm \
+    --url="${RMM_URL:-}" \
+    --out="${RMM_OUT:-}" \
+    --branch="${RMM_BRANCH:-}" \
+    \
+    -D BUILD_TESTS=${BUILD_TESTS} \
+    -D BUILD_BENCHMARKS=${BUILD_BENCH} \
+    -D DISABLE_DEPRECATION_WARNING=${DISABLE_DEPRECATION_WARNINGS} \
+    \
+    ${@};

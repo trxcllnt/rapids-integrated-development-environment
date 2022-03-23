@@ -1,0 +1,38 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+copy-inputs \
+    --project=rmm \
+    --url="${RMM_URL:-}" \
+    --branch="${RMM_BRANCH:-}"
+
+copy-inputs \
+    --project=cudf \
+    --url="${CUDF_URL:-}" \
+    --branch="${CUDF_BRANCH:-}"
+
+copy-inputs \
+    --project=raft \
+    --url="${RAFT_URL:-}" \
+    --branch="${RAFT_BRANCH:-}"
+
+copy-inputs \
+    --project=cumlprims_mg \
+    --url="${CUMLPRIMS_MG_URL:-}" \
+    --branch="${CUMLPRIMS_MG_BRANCH:-}"
+
+copy-inputs \
+    --project=cuml \
+    --url="${CUML_URL:-}" \
+    --branch="${CUML_BRANCH:-}"
+
+copy-inputs \
+    --project=cugraph-ops \
+    --url="${CUGRAPH_OPS_URL:-}" \
+    --branch="${CUGRAPH_OPS_BRANCH:-}"
+
+copy-inputs \
+    --project=cugraph \
+    --url="${CUGRAPH_URL:-}" \
+    --branch="${CUGRAPH_BRANCH:-}"
