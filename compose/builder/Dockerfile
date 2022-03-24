@@ -48,19 +48,18 @@ ENV CUDA_BIN_PATH=${CUDA_HOME}
 # Colorized compiler output
 ENV GCC_COLORS="error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01"
 # Add utility scripts
-COPY --chown=root:root usr/bin/* /usr/bin/
 COPY --chown=root:root usr/local/bin/* /usr/local/bin/
 
 WORKDIR /opt/rapids
 
 USER rapids:rapids
 
-# Add build scripts
-COPY --chown=rapids:rapids home/.bin /opt/rapids/.bin
+# Add plugins
+COPY --chown=rapids:rapids home/.plugins /opt/rapids/.plugins
 
 ENV PATH="$PATH:/opt/rapids/.bin"
 
-ENTRYPOINT ["fixuid", "-q"]
+ENTRYPOINT ["fixuid", "-q", "docker-entrypoint"]
 
 CMD ["/bin/bash", "-l"]
 

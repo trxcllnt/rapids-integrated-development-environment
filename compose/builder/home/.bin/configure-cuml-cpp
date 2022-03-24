@@ -25,7 +25,6 @@ fi
 configure-cpp \
     --project=cuml \
     --url="${CUML_URL:-}" \
-    --out="${CUML_OUT:-}" \
     --branch="${CUML_BRANCH:-}" \
     \
     -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \

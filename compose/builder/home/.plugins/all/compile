@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+$(which compile-rmm-cpp) && compile-rmm-cpp || true;
+$(which compile-cudf-cpp) && compile-cudf-cpp || true;
+$(which compile-raft-cpp) && compile-raft-cpp || true;
+$(which compile-cumlprims_mg-cpp) && compile-cumlprims_mg-cpp || true;
+$(which compile-cuml-cpp) && compile-cuml-cpp || true;
+$(which compile-cugraph-ops-cpp) && compile-cugraph-ops-cpp || true;
+$(which compile-cugraph-cpp) && compile-cugraph-cpp || true;
+$(which compile-cuspatial-cpp) && compile-cuspatial-cpp || true;

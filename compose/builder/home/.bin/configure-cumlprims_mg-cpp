@@ -2,14 +2,12 @@
 
 set -Eeo pipefail
 
-BUILD_TESTS=${BUILD_TESTS:-OFF}
 CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
 CUDA_KERNELINFO=${CUDA_KERNELINFO:-OFF}
 
 configure-cpp \
     --project=cumlprims_mg \
     --url="${CUMLPRIMS_MG_URL:-}" \
-    --out="${CUMLPRIMS_MG_OUT:-}" \
     --branch="${CUMLPRIMS_MG_BRANCH:-}" \
     \
     -D raft_ROOT="$(cpp-binary-dir --project=raft)" \
@@ -17,7 +15,7 @@ configure-cpp \
     -D DETECT_CONDA_ENV=OFF \
     -D DISABLE_FORCE_CLONE_RAFT=ON \
     \
-    -D BUILD_TESTS=${BUILD_TESTS} \
+    -D BUILD_TESTS=OFF \
     \
     -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
     -D CUDA_ENABLE_KERNELINFO=${CUDA_KERNELINFO} \

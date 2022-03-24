@@ -5,9 +5,10 @@ set -Eeo pipefail
 ARGS="\
     --project=cuspatial \
     --url=${CUSPATIAL_URL:-} \
-    --out=${CUSPATIAL_OUT:-} \
     --branch=${CUSPATIAL_BRANCH:-} \
-    --version=${CUSPATIAL_VERSION:-}"
+    --version=${CUSPATIAL_VERSION:-} \
+    --bin-out=${CUSPATIAL_BINARY_DIR:-} \
+    --src-out=${CUSPATIAL_SOURCE_DIR:-}"
 
 copy-inputs ${ARGS} \
  && configure-cuspatial-cpp ${@} \

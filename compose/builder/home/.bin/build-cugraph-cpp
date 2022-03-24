@@ -5,9 +5,10 @@ set -Eeo pipefail
 ARGS="\
     --project=cugraph \
     --url=${CUGRAPH_URL:-} \
-    --out=${CUGRAPH_OUT:-} \
     --branch=${CUGRAPH_BRANCH:-} \
-    --version=${CUGRAPH_VERSION:-}"
+    --version=${CUGRAPH_VERSION:-} \
+    --bin-out=${CUGRAPH_BINARY_DIR:-} \
+    --src-out=${CUGRAPH_SOURCE_DIR:-}"
 
 copy-inputs ${ARGS} \
  && configure-cugraph-cpp ${@} \

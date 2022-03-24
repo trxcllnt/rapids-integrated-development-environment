@@ -10,7 +10,6 @@ DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
 configure-cpp \
     --project=raft \
     --url="${RAFT_URL:-}" \
-    --out="${RAFT_OUT:-}" \
     --branch="${RAFT_BRANCH:-}" \
     \
     -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \
@@ -18,6 +17,7 @@ configure-cpp \
     -D DETECT_CONDA_ENV=OFF \
     \
     -D RAFT_COMPILE_LIBRARIES=ON \
+    -D RAFT_EXCLUDE_FAISS_FROM_ALL=OFF \
     \
     -D BUILD_TESTS=${BUILD_TESTS} \
     -D DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS} \

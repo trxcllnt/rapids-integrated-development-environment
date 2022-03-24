@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+$(which clean-rmm-cpp) && clean-rmm-cpp || true;
+$(which clean-cudf-cpp) && clean-cudf-cpp || true;
+$(which clean-raft-cpp) && clean-raft-cpp || true;
+$(which clean-cumlprims_mg-cpp) && clean-cumlprims_mg-cpp || true;
+$(which clean-cuml-cpp) && clean-cuml-cpp || true;
+$(which clean-cugraph-ops-cpp) && clean-cugraph-ops-cpp || true;
+$(which clean-cugraph-cpp) && clean-cugraph-cpp || true;
+$(which clean-cuspatial-cpp) && clean-cuspatial-cpp || true;

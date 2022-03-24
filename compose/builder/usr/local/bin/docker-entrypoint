@@ -1,0 +1,21 @@
+#! /usr/bin/env bash
+
+(
+    bin_dir=/opt/rapids/.bin
+    plugins=/opt/rapids/.plugins
+
+    mkdir -p $bin_dir $plugins
+
+    for plugin in $(find "$plugins" -maxdepth 1 -type d | tail -n+2); do
+        dir="$(basename "$plugin")"
+        for file in $(find "$plugin" -maxdepth 1 -type f); do
+            cmd="$(basename "$file")"
+            link="$bin_dir/$cmd-$dir"
+            if [[ ! -f "$link" ]]; then
+                ln -s "$file" "$link"
+            fi
+        done
+    done
+)
+
+exec "$@"

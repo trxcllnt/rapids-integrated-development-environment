@@ -5,9 +5,10 @@ set -Eeo pipefail
 ARGS="\
     --project=rmm \
     --url=${RMM_URL:-} \
-    --out=${RMM_OUT:-} \
     --branch=${RMM_BRANCH:-} \
-    --version=${RMM_VERSION:-}"
+    --version=${RMM_VERSION:-} \
+    --bin-out=${RMM_BINARY_DIR:-} \
+    --src-out=${RMM_SOURCE_DIR:-}"
 
 copy-inputs ${ARGS} \
  && configure-rmm-cpp ${@} \

@@ -10,7 +10,6 @@ DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
 configure-cpp \
     --project=cuspatial \
     --url="${CUSPATIAL_URL:-}" \
-    --out="${CUSPATIAL_OUT:-}" \
     --branch="${CUSPATIAL_BRANCH:-}" \
     \
     -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \

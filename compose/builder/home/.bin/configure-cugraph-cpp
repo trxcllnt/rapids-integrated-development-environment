@@ -8,7 +8,6 @@ CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
 configure-cpp \
     --project=cugraph \
     --url="${CUGRAPH_URL:-}" \
-    --out="${CUGRAPH_OUT:-}" \
     --branch="${CUGRAPH_BRANCH:-}" \
     \
     -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \

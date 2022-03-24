@@ -2,20 +2,10 @@
 
 set -Eeo pipefail
 
-ARGS=
-PROJECT=
-
-while [[ "$#" -gt 0 ]]; do
-    case $1 in
-        --url=*) ;;
-        --branch=*) ;;
-        --bin-out=*) ;;
-        --src-out=*) ;;
-        --version=*) ;;
-        --project=*) PROJECT="${1#--project=}";;
-        *) ARGS="${ARGS:+$ARGS }$1";;
-    esac; shift;
-done
+BUILD_BENCH=${BUILD_BENCH:-OFF}
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
+DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
 
 CMAKE_BUILD_TYPE=${BUILD_TYPE:-Release}
 CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES:-NATIVE}
@@ -23,26 +13,31 @@ CFLAGS="${CFLAGS:+$CFLAGS }-fdiagnostics-color=always"
 CXXFLAGS="${CXXFLAGS:+$CXXFLAGS }-fdiagnostics-color=always"
 CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
 
-SOURCE_DIR="$(cpp-source-dir --project=${PROJECT})"
-BINARY_DIR="$(cpp-binary-dir --project=${PROJECT})"
-
-if [[ -d "$SOURCE_DIR" ]]; then
+(
     set -x;
     CFLAGS=${CFLAGS} \
     CXXFLAGS=${CXXFLAGS} \
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
-          -S "$SOURCE_DIR" \
-          -B "$BINARY_DIR" \
           --log-level=VERBOSE \
+          -S /opt/rapids/cudf/cpp \
+          -B /opt/rapids/cudf/cpp/build \
+          \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
+          \
+          -D CUDF_ENABLE_ARROW_S3=OFF \
+          -D BUILD_TESTS=${BUILD_TESTS} \
+          -D BUILD_BENCHMARKS=${BUILD_BENCH} \
+          -D DISABLE_DEPRECATION_WARNING=${DISABLE_DEPRECATION_WARNINGS} \
+          \
+          -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
           \
           -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
           -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+          -D CMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES} \
           -D CMAKE_C_COMPILER_LAUNCHER=/usr/local/bin/sccache \
           -D CMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/sccache \
           -D CMAKE_CUDA_COMPILER_LAUNCHER=/usr/local/bin/sccache \
-          -D CMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES} \
           \
-          ${ARGS}
-    set +x;
-fi
+          ${@}
+)

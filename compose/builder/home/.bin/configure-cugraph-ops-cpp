@@ -9,7 +9,6 @@ CUDA_KERNELINFO=${CUDA_KERNELINFO:-OFF}
 configure-cpp \
     --project=cugraph-ops \
     --url="${CUGRAPH_OPS_URL:-}" \
-    --out="${CUGRAPH_OPS_OUT:-}" \
     --branch="${CUGRAPH_OPS_BRANCH:-}" \
     -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \
     -D raft_ROOT="$(cpp-binary-dir --project=raft)" \

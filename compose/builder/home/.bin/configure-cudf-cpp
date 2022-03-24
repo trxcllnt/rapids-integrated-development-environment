@@ -10,7 +10,6 @@ DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
 configure-cpp \
     --project=cudf \
     --url="${CUDF_URL:-}" \
-    --out="${CUDF_OUT:-}" \
     --branch="${CUDF_BRANCH:-}" \
     \
     -D rmm_ROOT="$(cpp-binary-dir --project=rmm)" \

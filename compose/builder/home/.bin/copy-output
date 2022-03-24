@@ -2,23 +2,38 @@
 
 set -Eeo pipefail
 
-OUT_DIR=
-BIN_DIR="$(cpp-binary-dir ${@})"
+EXTERNAL_BINARY_DIR=
+EXTERNAL_SOURCE_DIR=
+INTERNAL_BINARY_DIR="$(cpp-binary-dir ${@})"
+INTERNAL_SOURCE_DIR="$(cpp-source-dir ${@})"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --out=*) OUT_DIR="${1#--out=}";;
+        --bin-out=*) EXTERNAL_BINARY_DIR="${1#--bin-out=}";;
+        --src-out=*) EXTERNAL_SOURCE_DIR="${1#--src-out=}";;
         *) ;;
     esac; shift;
 done
 
-if [[ -d "$OUT_DIR" ]]; then
-    rm -rf "$OUT_DIR"/*
-    cp -r "$BIN_DIR/*" "$OUT_DIR/"
-    if [[ -f "$OUT_DIR/compile_commands.json" ]]; then
-        cat "$BIN_DIR/compile_commands.json"              \
-        | sed -r "s@$BIN_DIR@$OUT_DIR@g"                  \
-        | sed -r "s@/usr/local/nvidia@$/usr/local/cuda@g" \
-          > "$OUT_DIR/compile_commands.json"
+if [[ -n "$EXTERNAL_SOURCE_DIR" ]]; then
+    J=$(nproc --ignore=2)
+    if [[ -z "$EXTERNAL_BINARY_DIR" ]]; then
+        EXTERNAL_BINARY_DIR="$EXTERNAL_SOURCE_DIR/build";
     fi
+    (
+        set -x;
+        mkdir -p "$EXTERNAL_BINARY_DIR";
+        rm -rf "$EXTERNAL_BINARY_DIR"/*;
+
+        # Copy internal binary dir to external binary dir
+        time cp -r "$INTERNAL_BINARY_DIR"/* "$EXTERNAL_BINARY_DIR";
+
+        # Replace $INTERNAL_SOURCE_DIR with $EXTERNAL_SOURCE_DIR in build files
+        time find "$EXTERNAL_SOURCE_DIR" -type f | xargs -P$J -n1 \
+            sed -i -r "s@$INTERNAL_SOURCE_DIR@$EXTERNAL_SOURCE_DIR@g";
+
+        # Replace $INTERNAL_BINARY_DIR with $EXTERNAL_BINARY_DIR in build files
+        time find "$EXTERNAL_BINARY_DIR" -type f | xargs -P$J -n1 \
+            sed -i -r "s@$INTERNAL_BINARY_DIR@$EXTERNAL_BINARY_DIR@g";
+    )
 fi
