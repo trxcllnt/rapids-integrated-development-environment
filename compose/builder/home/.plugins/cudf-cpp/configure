@@ -26,6 +26,7 @@ CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
           -D rmm_ROOT=/opt/rapids/rmm/build \
           \
           -D CUDF_ENABLE_ARROW_S3=OFF \
+          -D PER_THREAD_DEFAULT_STREAM=ON \
           -D BUILD_TESTS=${BUILD_TESTS} \
           -D BUILD_BENCHMARKS=${BUILD_BENCH} \
           -D DISABLE_DEPRECATION_WARNING=${DISABLE_DEPRECATION_WARNINGS} \
