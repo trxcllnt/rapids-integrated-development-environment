@@ -2,11 +2,11 @@
 
 set -Eeo pipefail
 
-$(which clean-rmm-cpp) && clean-rmm-cpp || true;
-$(which clean-cudf-cpp) && clean-cudf-cpp || true;
-$(which clean-raft-cpp) && clean-raft-cpp || true;
-$(which clean-cumlprims_mg-cpp) && clean-cumlprims_mg-cpp || true;
-$(which clean-cuml-cpp) && clean-cuml-cpp || true;
-$(which clean-cugraph-ops-cpp) && clean-cugraph-ops-cpp || true;
-$(which clean-cugraph-cpp) && clean-cugraph-cpp || true;
-$(which clean-cuspatial-cpp) && clean-cuspatial-cpp || true;
+if [ -n $(which clean-rmm-cpp) ]; then clean-rmm-cpp; fi;
+if [ -n $(which clean-cudf-cpp) ]; then clean-cudf-cpp; fi;
+if [ -n $(which clean-raft-cpp) ]; then clean-raft-cpp; fi;
+if [ -n $(which clean-cumlprims_mg-cpp) ]; then clean-cumlprims_mg-cpp; fi;
+if [ -n $(which clean-cuml-cpp) ]; then clean-cuml-cpp; fi;
+if [ -n $(which clean-cugraph-ops-cpp) ]; then clean-cugraph-ops-cpp; fi;
+if [ -n $(which clean-cugraph-cpp) ]; then clean-cugraph-cpp; fi;
+if [ -n $(which clean-cuspatial-cpp) ]; then clean-cuspatial-cpp; fi;

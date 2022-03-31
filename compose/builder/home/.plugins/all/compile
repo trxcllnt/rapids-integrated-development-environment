@@ -2,11 +2,11 @@
 
 set -Eeo pipefail
 
-$(which compile-rmm-cpp) && compile-rmm-cpp || true;
-$(which compile-cudf-cpp) && compile-cudf-cpp || true;
-$(which compile-raft-cpp) && compile-raft-cpp || true;
-$(which compile-cumlprims_mg-cpp) && compile-cumlprims_mg-cpp || true;
-$(which compile-cuml-cpp) && compile-cuml-cpp || true;
-$(which compile-cugraph-ops-cpp) && compile-cugraph-ops-cpp || true;
-$(which compile-cugraph-cpp) && compile-cugraph-cpp || true;
-$(which compile-cuspatial-cpp) && compile-cuspatial-cpp || true;
+if [ -n $(which compile-rmm-cpp) ] then compile-rmm-cpp; fi;
+if [ -n $(which compile-cudf-cpp) ] then compile-cudf-cpp; fi;
+if [ -n $(which compile-raft-cpp) ] then compile-raft-cpp; fi;
+if [ -n $(which compile-cumlprims_mg-cpp) ] then compile-cumlprims_mg-cpp; fi;
+if [ -n $(which compile-cuml-cpp) ] then compile-cuml-cpp; fi;
+if [ -n $(which compile-cugraph-ops-cpp) ] then compile-cugraph-ops-cpp; fi;
+if [ -n $(which compile-cugraph-cpp) ] then compile-cugraph-cpp; fi;
+if [ -n $(which compile-cuspatial-cpp) ] then compile-cuspatial-cpp; fi;

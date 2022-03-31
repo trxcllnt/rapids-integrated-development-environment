@@ -2,11 +2,11 @@
 
 set -Eeo pipefail
 
-$(which build-rmm-cpp) && build-rmm-cpp || true;
-$(which build-cudf-cpp) && build-cudf-cpp || true;
-$(which build-raft-cpp) && build-raft-cpp || true;
-$(which build-cumlprims_mg-cpp) && build-cumlprims_mg-cpp || true;
-$(which build-cuml-cpp) && build-cuml-cpp || true;
-$(which build-cugraph-ops-cpp) && build-cugraph-ops-cpp || true;
-$(which build-cugraph-cpp) && build-cugraph-cpp || true;
-$(which build-cuspatial-cpp) && build-cuspatial-cpp || true;
+if [ -n $(which build-rmm-cpp) ]; then build-rmm-cpp; fi;
+if [ -n $(which build-cudf-cpp) ]; then build-cudf-cpp; fi;
+if [ -n $(which build-raft-cpp) ]; then build-raft-cpp; fi;
+if [ -n $(which build-cumlprims_mg-cpp) ]; then build-cumlprims_mg-cpp; fi;
+if [ -n $(which build-cuml-cpp) ]; then build-cuml-cpp; fi;
+if [ -n $(which build-cugraph-ops-cpp) ]; then build-cugraph-ops-cpp; fi;
+if [ -n $(which build-cugraph-cpp) ]; then build-cugraph-cpp; fi;
+if [ -n $(which build-cuspatial-cpp) ]; then build-cuspatial-cpp; fi;

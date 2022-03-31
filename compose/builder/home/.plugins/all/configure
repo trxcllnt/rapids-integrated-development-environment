@@ -2,11 +2,11 @@
 
 set -Eeo pipefail
 
-$(which configure-rmm-cpp) && configure-rmm-cpp || true;
-$(which configure-cudf-cpp) && configure-cudf-cpp || true;
-$(which configure-raft-cpp) && configure-raft-cpp || true;
-$(which configure-cumlprims_mg-cpp) && configure-cumlprims_mg-cpp || true;
-$(which configure-cuml-cpp) && configure-cuml-cpp || true;
-$(which configure-cugraph-ops-cpp) && configure-cugraph-ops-cpp || true;
-$(which configure-cugraph-cpp) && configure-cugraph-cpp || true;
-$(which configure-cuspatial-cpp) && configure-cuspatial-cpp || true;
+if [ -n $(which configure-rmm-cpp) ] then configure-rmm-cpp; fi;
+if [ -n $(which configure-cudf-cpp) ] then configure-cudf-cpp; fi;
+if [ -n $(which configure-raft-cpp) ] then configure-raft-cpp; fi;
+if [ -n $(which configure-cumlprims_mg-cpp) ] then configure-cumlprims_mg-cpp; fi;
+if [ -n $(which configure-cuml-cpp) ] then configure-cuml-cpp; fi;
+if [ -n $(which configure-cugraph-ops-cpp) ] then configure-cugraph-ops-cpp; fi;
+if [ -n $(which configure-cugraph-cpp) ] then configure-cugraph-cpp; fi;
+if [ -n $(which configure-cuspatial-cpp) ] then configure-cuspatial-cpp; fi;
