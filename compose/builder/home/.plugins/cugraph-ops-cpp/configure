@@ -13,6 +13,12 @@ CFLAGS="${CFLAGS:+$CFLAGS }-fdiagnostics-color=always"
 CXXFLAGS="${CXXFLAGS:+$CXXFLAGS }-fdiagnostics-color=always"
 CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
 
+BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-ON}
+
+if [[ $BUILD_SHARED_LIBS != OFF ]]; then
+    BUILD_SHARED_LIBS=ON
+fi
+
 (
     set -x;
     CFLAGS=${CFLAGS} \
@@ -30,6 +36,8 @@ CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
           -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
           -D CUDA_ENABLE_KERNELINFO=${CUDA_KERNELINFO} \
           -D BUILD_CUGRAPH_OPS_CPP_TESTS=${BUILD_TESTS} \
+          \
+          -D BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
           \
           -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
           -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \

@@ -13,6 +13,15 @@ CFLAGS="${CFLAGS:+$CFLAGS }-fdiagnostics-color=always"
 CXXFLAGS="${CXXFLAGS:+$CXXFLAGS }-fdiagnostics-color=always"
 CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
 
+CUDF_USE_ARROW_STATIC=OFF
+BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-ON}
+
+if [[ $BUILD_SHARED_LIBS == OFF ]]; then
+    CUDF_USE_ARROW_STATIC=ON
+else
+    BUILD_SHARED_LIBS=ON
+fi
+
 (
     set -x;
     CFLAGS=${CFLAGS} \
@@ -30,6 +39,9 @@ CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
           -D BUILD_TESTS=${BUILD_TESTS} \
           -D BUILD_BENCHMARKS=${BUILD_BENCH} \
           -D DISABLE_DEPRECATION_WARNING=${DISABLE_DEPRECATION_WARNINGS} \
+          \
+          -D BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
+          -D CUDF_USE_ARROW_STATIC=${CUDF_USE_ARROW_STATIC} \
           \
           -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
           \
