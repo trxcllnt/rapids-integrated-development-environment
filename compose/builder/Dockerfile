@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1.3
 
 ARG BASE_IMAGE=nvidia/cuda:11.6.0-devel-ubuntu20.04
+ARG GDAL_IMAGE=osgeo/gdal:ubuntu-full-3.3.1
 
 FROM ${BASE_IMAGE} as base
+FROM ${GDAL_IMAGE} as gdal
 
 FROM base as base-amd64
 
@@ -20,6 +22,10 @@ ONBUILD ADD https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache
 # builder
 #########################################
 FROM base-${TARGETARCH}
+
+# Install gdal for cuspatial
+COPY --from=gdal /usr/include/*.h /usr/include/
+COPY --from=gdal /usr/lib/*gdal* /usr/lib/
 
 WORKDIR /
 
