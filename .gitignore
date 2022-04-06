@@ -1,3 +1,11 @@
+z-*
 .env
-.config/*
-!.config/.keepDir
+
+compose/code-server/home/.cache/*
+!compose/code-server/home/.cache/.keepDir
+
+compose/code-server/home/.local/*
+!compose/code-server/home/.local/.keepDir
+
+compose/code-server/home/.config/*
+!compose/code-server/home/.config/.keepDir

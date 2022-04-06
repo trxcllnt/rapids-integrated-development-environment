@@ -1,0 +1,82 @@
+#! /usr/bin/env bash
+
+set -Eeuo pipefail
+
+# We do this first to ensure sudo works below when renaming the user.
+# Otherwise the current container UID may not exist in the passwd database.
+eval "$(fixuid -q)"
+
+if [[ -n "${DOCKER_USER:-}" ]]; then
+    USER="$DOCKER_USER"
+    if [[ "$USER" != "$(whoami)" ]]; then
+        echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers.d/nopasswd > /dev/null
+        # Unfortunately we cannot change $HOME as we cannot move any bind mounts
+        # nor can we bind mount $HOME into a new home as that requires a privileged container.
+        sudo usermod --login "$USER" rapids
+        sudo groupmod -n "$USER" rapids
+        sudo sed -i "/rapids/d" /etc/sudoers.d/nopasswd
+        sudo sed -i "s/user: rapids/user: $USER/g" /etc/fixuid/config.yml
+        sudo sed -i "s/group: rapids/group: $USER/g" /etc/fixuid/config.yml
+    fi
+fi
+
+if [[ -n "${DOCKER_USER_HOME:-}" ]]; then
+    if [[ "$DOCKER_USER_HOME" != "$HOME" ]]; then
+        HOME="$DOCKER_USER_HOME"
+        mkdir -p "$DOCKER_USER_HOME"
+        sudo usermod -d "$HOME" "$USER"
+        sudo sed -i "s@/opt/rapids@$HOME@g" /etc/fixuid/config.yml
+    fi
+fi
+
+if [[ -z $(cat /etc/group | grep -F "docker") ]]; then
+    sudo groupadd -g ${DOCKERD_GROUP:-998} docker
+fi
+
+if [[ -z $(id -nGz "$USER" | grep -zxF "docker") ]]; then
+    sudo usermod -aG docker "$USER"
+fi
+
+# https://stackoverflow.com/a/63311331/3117331
+sudo chgrp docker $(which docker)
+sudo chmod g+s $(which docker)
+
+#######################################################
+# Install code-server extensions
+#######################################################
+(
+install_code_server_extensions() {
+    for EXT in ${@:2}; do
+        if [ -z "$(code-server --list-extensions | grep $EXT)" ]; then
+            code-server --install-extension $EXT
+        fi
+    done
+}
+
+install_code_server_extensions                \
+    `# CMake language support`                \
+    twxs.cmake                                \
+    `# Clang-Format`                          \
+    xaver.clang-format                        \
+    `# code LLDB`                             \
+    `# vadimcn.vscode-lldb`                   \
+    `# clangd`                                \
+    `# llvm-vs-code-extensions.vscode-clangd` \
+    `# Doxygen Documentation Generator`       \
+    cschlosser.doxdocgen
+
+# Tasks Shell Input
+if [ -z "$(code-server --list-extensions | grep augustocdias.tasks-shell-input)" ]; then
+    code-server --install-extension /usr/local/src/tasks-shell-input.vsix || true;
+fi
+# MS C++ Tools
+if [ -z "$(code-server --list-extensions | grep ms-vscode.cpptools)" ]; then
+    code-server --install-extension /usr/local/src/ms-vscode.cpptools.vsix || true;
+fi
+# NVIDIA Nsight
+if [ -z "$(code-server --list-extensions | grep nvidia.nsight-vscode-edition)" ]; then
+    code-server --install-extension /usr/local/src/nsight-vscode.vsix || true;
+fi
+)
+
+exec dumb-init /usr/bin/code-server "$@"

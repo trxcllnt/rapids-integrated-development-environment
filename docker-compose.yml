@@ -10,10 +10,10 @@ x-run-with-gpu: &run_with_gpu
 
 services:
 
-  builder:
-    image: pauletaylor/rapids-ide-builder:cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+  cpp-builder:
+    image: pauletaylor/rapids-ide:builder-cpp-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     build:
-      context: compose/builder
+      context: compose/cpp-builder
       args:
         GCC_VERSION: ${GCC_VERSION:-9}
         UXC_VERSION: ${UXC_VERSION:-1.11}
@@ -24,29 +24,37 @@ services:
       TERM: "${TERM:-}"
       NVIDIA_DRIVER_CAPABILITIES: all
     volumes:
-      # - "./compose/builder/home/.bin:/opt/rapids/.bin:ro"
-      - "./compose/builder/home/.plugins:/opt/rapids/.plugins:ro"
-      - "/home/ptaylor/dev/rapids/rmm:/opt/rapids/rmm:rw"
-      - "/home/ptaylor/dev/rapids/cudf:/opt/rapids/cudf:rw"
-      - "/home/ptaylor/dev/rapids/raft:/opt/rapids/raft:rw"
-      - "/home/ptaylor/dev/rapids/cumlprims_mg:/opt/rapids/cumlprims_mg:rw"
-      - "/home/ptaylor/dev/rapids/cuml:/opt/rapids/cuml:rw"
-      - "/home/ptaylor/dev/rapids/cugraph-ops:/opt/rapids/cugraph-ops:rw"
-      - "/home/ptaylor/dev/rapids/cugraph:/opt/rapids/cugraph:rw"
-      - "/home/ptaylor/dev/rapids/cuspatial:/opt/rapids/cuspatial:rw"
+      # - "./compose/cpp-builder/home/.bin:/opt/rapids/.bin:ro"
+      - "./compose/cpp-builder/home/.plugins:/opt/rapids/.plugins:ro"
+      # - "/home/ptaylor/dev/rapids/rmm:/opt/rapids/rmm:rw"
+      # - "/home/ptaylor/dev/rapids/cudf:/opt/rapids/cudf:rw"
+      # - "/home/ptaylor/dev/rapids/raft:/opt/rapids/raft:rw"
+      # - "/home/ptaylor/dev/rapids/cumlprims_mg:/opt/rapids/cumlprims_mg:rw"
+      # - "/home/ptaylor/dev/rapids/cuml:/opt/rapids/cuml:rw"
+      # - "/home/ptaylor/dev/rapids/cugraph-ops:/opt/rapids/cugraph-ops:rw"
+      # - "/home/ptaylor/dev/rapids/cugraph:/opt/rapids/cugraph:rw"
+      # - "/home/ptaylor/dev/rapids/cuspatial:/opt/rapids/cuspatial:rw"
     <<: *run_with_gpu
 
-  vscode:
-    image: pauletaylor/rapids-ide-vscode:latest
+  code-server:
+    image: pauletaylor/rapids-ide:code-server-4.2.0
     build:
-      context: compose/vscode
+      context: compose/code-server
+      args:
+        BASE_IMAGE: pauletaylor/rapids-ide:builder-cpp-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     env_file: .env
     environment:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
+      DOCKER_USER: "${USER:-coder}"
+      DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
+      # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
+      DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
     volumes:
-      - "./compose/builder/home/.config:/home/coder/.config"
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./compose/code-server/home/.cache:/opt/rapids/.cache"
+      - "./compose/code-server/home/.local:/opt/rapids/.local"
+      - "./compose/code-server/home/.config:/opt/rapids/.config"
     ports:
       - "8080:8080"
     command: --link

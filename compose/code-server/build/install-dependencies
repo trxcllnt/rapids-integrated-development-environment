@@ -1,4 +1,10 @@
-#! /usr/bin/env -S bash -Eeo pipefail
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+# https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
+rm -f /etc/apt/apt.conf.d/docker-clean;
+echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 #######################################################
 # Update SSL certs
@@ -24,24 +30,37 @@ deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-${
 deb-src  http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-${LLVM_VERSION} main
 EOF
 
+# Install GitHub apt repository
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
 #######################################################
 # Install dependencies
 #######################################################
 apt update
-apt install -y --no-install-recommends       \
-    git                                      \
-    `# gdb and lldb for debugging`           \
-    gdb                                      \
-    lldb-${LLVM_VERSION}                     \
-    libllvm${LLVM_VERSION}                   \
-    `# clangd for C++ intellisense`          \
-    clangd-${LLVM_VERSION}                   \
-    `# clang-tidy for C++ linting`           \
-    clang-tidy-${LLVM_VERSION}               \
-    `# clang-format for C++ auto-formatting` \
-    clang-format-${LLVM_VERSION}             \
-    `# need these for docker-in-docker`      \
-    pigz iptables openssl xz-utils
+apt install -y --no-install-recommends      \
+    `# GitHub CLI, and Git LFS`             \
+    gh git-lfs                              \
+    `# gdb and lldb for debugging`          \
+    gdb                                     \
+    lldb-${LLVM_VERSION}                    \
+    libllvm${LLVM_VERSION}                  \
+    `# clangd for C++ intellisense`         \
+    clangd-${LLVM_VERSION}                  \
+    `# clang-tidy for C++ linting`          \
+    clang-tidy-${LLVM_VERSION}              \
+    `# clang-format for C++ formatting`     \
+    clang-format-${LLVM_VERSION}            \
+    `# need these for docker-in-docker`     \
+    pigz iptables openssl xz-utils          \
+    `# code-server dependencies`            \
+    `# https://github.com/coder/code-server/blob/5bc26e90cbf17c9e79d5646fd93838fc0082d9ab/ci/release-image/Dockerfile#L4-L19` \
+    lsb-release                             \
+    procps openssh-client sudo              \
+    dumb-init zsh htop locales man vim nano \
+ && git lfs install
 
 #######################################################
 # Install update-alternatives links
@@ -73,3 +92,8 @@ update-alternatives \
 
 # Set lldb-${LLVM_VERSION} as the default lldb, llvm-config-${LLVM_VERSION} as default llvm-config
 update-alternatives --set lldb /usr/bin/lldb-${LLVM_VERSION}
+
+#######################################################
+# Install code-server
+#######################################################
+dpkg -i /usr/local/src/code-server.deb

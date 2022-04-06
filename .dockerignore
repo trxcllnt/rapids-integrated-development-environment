@@ -1,3 +1,5 @@
+z-*
 .env
-.config
-etc/.cache
+compose/code-server/home/.cache
+compose/code-server/home/.local
+compose/code-server/home/.config

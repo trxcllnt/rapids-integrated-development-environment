@@ -1,0 +1,11 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+apt remove -y \
+    software-properties-common
+
+apt autoremove -y && apt clean
+
+rm /etc/apt/apt.conf.d/keep-cache
+rm -rf /tmp/* /var/tmp/* /usr/local/src/*.deb

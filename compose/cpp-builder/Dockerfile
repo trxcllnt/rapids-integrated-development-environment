@@ -19,7 +19,7 @@ ONBUILD ADD https://github.com/boxboat/fixuid/releases/download/v0.5.1/fixuid-0.
 ONBUILD ADD https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-aarch64-unknown-linux-musl.tar.gz sccache.tar.gz
 
 #########################################
-# builder
+# cpp-builder
 #########################################
 FROM base-${TARGETARCH}
 
@@ -29,8 +29,8 @@ COPY --from=gdal /usr/lib/*gdal* /usr/lib/
 
 WORKDIR /
 
-# https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+# # https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
+# RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 ARG TARGETARCH
 ARG GCC_VERSION=9
@@ -65,7 +65,7 @@ COPY --chown=rapids:rapids home/.plugins /opt/rapids/.plugins
 
 ENV PATH="$PATH:/opt/rapids/.bin"
 
-ENTRYPOINT ["fixuid", "-q", "docker-entrypoint"]
+ENTRYPOINT ["fixuid", "-q", "cpp-builder-entrypoint"]
 
 CMD ["/bin/bash", "-l"]
 
