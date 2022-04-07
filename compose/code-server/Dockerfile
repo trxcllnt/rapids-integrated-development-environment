@@ -46,9 +46,9 @@ COPY --from=docker:20-dind /usr/local/bin/ /usr/local/bin/
 VOLUME /var/lib/docker
 
 # Copy in VSCode extensions
-COPY augustocdias.tasks-shell-input-1.7.0.vsix /usr/local/src/tasks-shell-input.vsix
-COPY ms-vscode.cpptools-1.9.7@linux-x64.vsix /usr/local/src/ms-vscode.cpptools.vsix
-COPY NVIDIA.nsight-vscode-edition-2021.1.30130113.vsix /usr/local/src/nsight-vscode.vsix
+COPY extensions/augustocdias.tasks-shell-input-1.7.0.vsix /usr/local/src/tasks-shell-input.vsix
+COPY extensions/ms-vscode.cpptools-1.9.7@linux-x64.vsix /usr/local/src/ms-vscode.cpptools.vsix
+COPY extensions/NVIDIA.nsight-vscode-edition-2021.1.30130113.vsix /usr/local/src/nsight-vscode.vsix
 
 # Copy in code-server entrypoint
 COPY --chown=root:root usr/local/bin/* /usr/local/bin/
