@@ -1,0 +1,88 @@
+#! /usr/bin/env bash
+set -Eeo pipefail;
+cd "$(dirname "$(realpath "$0")")";
+if [[ -d "$HOME/rapids/cugraph-ops" ]]; then
+
+    tmp_env_file="$(mktemp)";
+    touch "$HOME/rapids/.env";
+    cp "$HOME/rapids/.env" "$tmp_env_file";
+
+    on_exit() {
+        ERRCODE="$?";
+        rm -f "$tmp_env_file" >/dev/null 2>&1 || true;
+        exit "$ERRCODE";
+    }
+
+    trap on_exit ERR EXIT HUP INT QUIT TERM STOP PWR;
+
+    set -a && . "$tmp_env_file" && set +a;
+
+    cpp_bin_dir="$(cpp-binary-dir-util --project=cugraph-ops)";
+    cpp_src_dir="$(cpp-source-dir-util --project=cugraph-ops)";
+    
+    if [[ -d "$HOME/rapids/rmm" ]]; then
+        echo "RMM_SOURCE_DIR=$HOME/rapids/rmm" >> "$tmp_env_file";
+        echo "RMM_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=rmm)" >> "$tmp_env_file";
+        echo "RMM_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=rmm)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/raft" ]]; then
+        echo "RAFT_SOURCE_DIR=$HOME/rapids/raft" >> "$tmp_env_file";
+        echo "RAFT_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=raft)" >> "$tmp_env_file";
+        echo "RAFT_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=raft)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/cudf" ]]; then
+        echo "CUDF_SOURCE_DIR=$HOME/rapids/cudf" >> "$tmp_env_file";
+        echo "CUDF_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cudf)" >> "$tmp_env_file";
+        echo "CUDF_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cudf)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/cumlprims_mg" ]]; then
+        echo "CUMLPRIMS_MG_SOURCE_DIR=$HOME/rapids/cumlprims_mg" >> "$tmp_env_file";
+        echo "CUMLPRIMS_MG_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cumlprims_mg)" >> "$tmp_env_file";
+        echo "CUMLPRIMS_MG_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cumlprims_mg)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/cuml" ]]; then
+        echo "CUML_SOURCE_DIR=$HOME/rapids/cuml" >> "$tmp_env_file";
+        echo "CUML_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cuml)" >> "$tmp_env_file";
+        echo "CUML_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cuml)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/cugraph-ops" ]]; then
+        echo "CUGRAPH_OPS_SOURCE_DIR=$HOME/rapids/cugraph-ops" >> "$tmp_env_file";
+        echo "CUGRAPH_OPS_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cugraph-ops)" >> "$tmp_env_file";
+        echo "CUGRAPH_OPS_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cugraph-ops)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/cugraph" ]]; then
+        echo "CUGRAPH_SOURCE_DIR=$HOME/rapids/cugraph" >> "$tmp_env_file";
+        echo "CUGRAPH_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cugraph)" >> "$tmp_env_file";
+        echo "CUGRAPH_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cugraph)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/cuspatial" ]]; then
+        echo "CUSPATIAL_SOURCE_DIR=$HOME/rapids/cuspatial" >> "$tmp_env_file";
+        echo "CUSPATIAL_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cuspatial)" >> "$tmp_env_file";
+        echo "CUSPATIAL_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cuspatial)" >> "$tmp_env_file";
+    fi
+
+    volumes="";
+    if [[ -d "$HOME/rapids/rmm" ]]; then volumes+="-v $HOME/rapids/rmm:$HOME/rapids/rmm:ro "; fi
+    if [[ -d "$HOME/rapids/raft" ]]; then volumes+="-v $HOME/rapids/raft:$HOME/rapids/raft:ro "; fi
+    if [[ -d "$HOME/rapids/cudf" ]]; then volumes+="-v $HOME/rapids/cudf:$HOME/rapids/cudf:ro "; fi
+    if [[ -d "$HOME/rapids/cumlprims_mg" ]]; then volumes+="-v $HOME/rapids/cumlprims_mg:$HOME/rapids/cumlprims_mg:ro "; fi
+    if [[ -d "$HOME/rapids/cuml" ]]; then volumes+="-v $HOME/rapids/cuml:$HOME/rapids/cuml:ro "; fi
+    if [[ -d "$HOME/rapids/cugraph-ops" ]]; then volumes+="-v $HOME/rapids/cugraph-ops:/opt/rapids/cugraph-ops "; fi
+    if [[ -d "$HOME/rapids/cugraph" ]]; then volumes+="-v $HOME/rapids/cugraph:$HOME/rapids/cugraph:ro "; fi
+    if [[ -d "$HOME/rapids/cuspatial" ]]; then volumes+="-v $HOME/rapids/cuspatial:$HOME/rapids/cuspatial:ro "; fi
+
+    docker run \
+        --rm -it --runtime nvidia \
+        --env-file "$tmp_env_file" \
+        ${volumes} \
+        pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04 \
+        bash -c "
+        copy-inputs-util --project=\"cugraph-ops\" --src=\"\$CUGRAPH_OPS_SOURCE_DIR\" --bin=\"\$CUGRAPH_OPS_CPP_BINARY_DIR\" \
+     && clean-cugraph-ops-cpp \
+     && configure-cugraph-ops-cpp \
+     && copy-output-util --project=\"cugraph-ops\" --src=\"\$CUGRAPH_OPS_CPP_SOURCE_DIR\" --bin=\"\$CUGRAPH_OPS_CPP_BINARY_DIR\"";
+
+    if [[ -f "$cpp_bin_dir/compile_commands.json" ]]; then
+        ln -sf "$cpp_bin_dir/compile_commands.json" "$cpp_src_dir/compile_commands.json";
+    fi
+fi

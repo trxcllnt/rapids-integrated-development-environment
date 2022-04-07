@@ -26,10 +26,10 @@ fi
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
           --log-level=VERBOSE \
-          -S /opt/rapids/cumlprims_mg/cpp \
-          -B /opt/rapids/cumlprims_mg/cpp/build \
+          -S ${CUMLPRIMS_MG_CPP_SOURCE_DIR:-/opt/rapids/cumlprims_mg/cpp} \
+          -B ${CUMLPRIMS_MG_CPP_BINARY_DIR:-/opt/rapids/cumlprims_mg/cpp/build} \
           \
-          -D raft_ROOT=/opt/rapids/raft/cpp/build \
+          -D raft_ROOT=${RAFT_CPP_BINARY_DIR:-/opt/rapids/raft/cpp/build} \
           \
           `# cumlprims_mg tests currently fail to compile` \
           -D BUILD_TESTS=OFF \

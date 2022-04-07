@@ -2,4 +2,4 @@
 
 set -Eeo pipefail
 
-rm -rf /opt/rapids/rmm/build;
+rm -rf ${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build};

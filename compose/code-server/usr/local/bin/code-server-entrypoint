@@ -22,18 +22,25 @@ fi
 
 if [[ -n "${DOCKER_USER_HOME:-}" ]]; then
     if [[ "$DOCKER_USER_HOME" != "$HOME" ]]; then
-        HOME="$DOCKER_USER_HOME"
         mkdir -p "$DOCKER_USER_HOME"
-        sudo usermod -d "$HOME" "$USER"
-        sudo sed -i "s@/opt/rapids@$HOME@g" /etc/fixuid/config.yml
+        sudo usermod -d "$DOCKER_USER_HOME" "$USER"
+        sudo sed -i "s@/opt/rapids@$DOCKER_USER_HOME@g" /etc/fixuid/config.yml
+        touch "$HOME"/.{bashrc,eternal_bash_history}
+        if [[ ! -f "$DOCKER_USER_HOME"/.bashrc ]]; then
+            cp "$HOME"/.bashrc "$DOCKER_USER_HOME"/.bashrc
+        fi
+        if [[ ! -f "$DOCKER_USER_HOME"/.eternal_bash_history ]]; then
+            cp "$HOME"/.eternal_bash_history "$DOCKER_USER_HOME"/.eternal_bash_history
+        fi
+        HOME="$DOCKER_USER_HOME"
     fi
 fi
 
-if [[ -z $(cat /etc/group | grep -F "docker") ]]; then
+if [[ ! "$(cat /etc/group | grep -F "docker")" ]]; then
     sudo groupadd -g ${DOCKERD_GROUP:-998} docker
 fi
 
-if [[ -z $(id -nGz "$USER" | grep -zxF "docker") ]]; then
+if [[ ! "$(id -nGz "$USER" | grep -zxF "docker")" ]]; then
     sudo usermod -aG docker "$USER"
 fi
 
@@ -47,7 +54,7 @@ sudo chmod g+s $(which docker)
 (
 install_code_server_extensions() {
     for EXT in ${@:2}; do
-        if [ -z "$(code-server --list-extensions | grep $EXT)" ]; then
+        if [ ! "$(code-server --list-extensions | grep $EXT)" ]; then
             code-server --install-extension $EXT
         fi
     done
@@ -58,25 +65,27 @@ install_code_server_extensions                \
     twxs.cmake                                \
     `# Clang-Format`                          \
     xaver.clang-format                        \
-    `# code LLDB`                             \
-    `# vadimcn.vscode-lldb`                   \
-    `# clangd`                                \
-    `# llvm-vs-code-extensions.vscode-clangd` \
     `# Doxygen Documentation Generator`       \
     cschlosser.doxdocgen
 
 # Tasks Shell Input
-if [ -z "$(code-server --list-extensions | grep augustocdias.tasks-shell-input)" ]; then
+if [ ! "$(code-server --list-extensions | grep augustocdias.tasks-shell-input)" ]; then
     code-server --install-extension /usr/local/src/tasks-shell-input.vsix || true;
 fi
 # MS C++ Tools
-if [ -z "$(code-server --list-extensions | grep ms-vscode.cpptools)" ]; then
+if [ ! "$(code-server --list-extensions | grep ms-vscode.cpptools)" ]; then
     code-server --install-extension /usr/local/src/ms-vscode.cpptools.vsix || true;
 fi
 # NVIDIA Nsight
-if [ -z "$(code-server --list-extensions | grep nvidia.nsight-vscode-edition)" ]; then
+if [ ! "$(code-server --list-extensions | grep nvidia.nsight-vscode-edition)" ]; then
     code-server --install-extension /usr/local/src/nsight-vscode.vsix || true;
 fi
 )
 
-exec dumb-init /usr/bin/code-server "$@"
+if [[ ! "${PORT:-}" ]]; then
+    PORT=8080
+fi
+
+mkdir -p "$HOME/rapids"
+
+exec cpp-builder-entrypoint dumb-init /usr/bin/code-server --bind-addr "0.0.0.0:$PORT" "$HOME/rapids" "$@"

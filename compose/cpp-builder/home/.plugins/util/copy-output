@@ -1,0 +1,38 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+cd $(dirname "$(realpath "$0")")
+
+PROJECT=
+INTERNAL_BINARY_DIR=
+INTERNAL_SOURCE_DIR=
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --project=*) PROJECT="${1#--project=}";;
+        --bin=*) INTERNAL_BINARY_DIR="${1#--bin=}";;
+        --src=*) INTERNAL_SOURCE_DIR="${1#--src=}";;
+        *) ;;
+    esac; shift;
+done
+
+EXTERNAL_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")"
+EXTERNAL_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")"
+
+if [[ -n "$INTERNAL_SOURCE_DIR" ]]; then
+    if [[ -z "$INTERNAL_BINARY_DIR" ]]; then
+        INTERNAL_BINARY_DIR="$INTERNAL_SOURCE_DIR/build";
+    fi
+    (
+        # set -x;
+
+        bin_suffix="$(realpath -m --relative-to="$INTERNAL_SOURCE_DIR" "$INTERNAL_BINARY_DIR")";
+        EXTERNAL_BINARY_DIR="$EXTERNAL_SOURCE_DIR/$bin_suffix";
+        mkdir -p "$EXTERNAL_BINARY_DIR";
+        rm -rf "$EXTERNAL_BINARY_DIR"/*;
+
+        # Copy internal binary dir to external binary dir
+        cp -r "$INTERNAL_BINARY_DIR"/* "$EXTERNAL_BINARY_DIR"/;
+    )
+fi

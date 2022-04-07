@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+echo "$(cpp-source-dir-util ${@})/build"

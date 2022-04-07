@@ -1,8 +1,8 @@
 #! /usr/bin/env bash
 
 (
-    bin_dir=/opt/rapids/.bin
-    plugins=/opt/rapids/.plugins
+    bin_dir="/opt/rapids/.bin"
+    plugins="/opt/rapids/.plugins"
 
     mkdir -p $bin_dir $plugins
 

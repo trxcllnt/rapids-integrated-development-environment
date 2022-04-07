@@ -1,5 +1,3 @@
 z-*
 .env
-compose/code-server/home/.cache
-compose/code-server/home/.local
-compose/code-server/home/.config
+compose/code-server/home

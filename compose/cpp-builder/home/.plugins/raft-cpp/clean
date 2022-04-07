@@ -2,4 +2,4 @@
 
 set -Eeo pipefail
 
-rm -rf /opt/rapids/raft/cpp/build;
+rm -rf ${RAFT_CPP_BINARY_DIR:-/opt/rapids/raft/cpp/build};

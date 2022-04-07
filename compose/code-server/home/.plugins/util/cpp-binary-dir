@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+PROJECT=
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --project=*) PROJECT="${1#--project=}";;
+        *) ;;
+    esac; shift;
+done
+
+prefix="$(cpp-source-dir-util --project=$PROJECT)/build/cuda-$CUDA_VERSION";
+branch_name="$(git -C "$HOME/rapids/$PROJECT" branch --show-current)";
+build_type="$(echo "${BUILD_TYPE:-Release}" | tr '[:upper:]' '[:lower:]')";
+echo "$prefix/${branch_name//\//__}/$build_type";

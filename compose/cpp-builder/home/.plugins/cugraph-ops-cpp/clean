@@ -2,4 +2,4 @@
 
 set -Eeo pipefail
 
-rm -rf /opt/rapids/cugraph-ops/build;
+rm -rf ${CUGRAPH_OPS_CPP_BINARY_DIR:-/opt/rapids/cugraph-ops/build};

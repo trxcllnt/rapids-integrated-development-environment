@@ -29,10 +29,10 @@ fi
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
           --log-level=VERBOSE \
-          -S /opt/rapids/raft/cpp \
-          -B /opt/rapids/raft/cpp/build \
+          -S ${RAFT_CPP_SOURCE_DIR:-/opt/rapids/raft/cpp} \
+          -B ${RAFT_CPP_BINARY_DIR:-/opt/rapids/raft/cpp/build} \
           \
-          -D rmm_ROOT=/opt/rapids/rmm/build \
+          -D rmm_ROOT=${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build} \
           \
           -D DETECT_CONDA_ENV=OFF \
           -D RAFT_COMPILE_LIBRARIES=ON \

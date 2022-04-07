@@ -19,8 +19,8 @@ CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
           --log-level=VERBOSE \
-          -S /opt/rapids/rmm \
-          -B /opt/rapids/rmm/build \
+          -S ${RMM_CPP_SOURCE_DIR:-/opt/rapids/rmm} \
+          -B ${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build} \
           \
           -D BUILD_TESTS=${BUILD_TESTS} \
           -D BUILD_BENCHMARKS=${BUILD_BENCH} \

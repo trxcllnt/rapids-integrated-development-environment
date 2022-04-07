@@ -5,10 +5,6 @@ set -Eeo pipefail
 add-apt-repository --remove -y ppa:git-core/ppa
 add-apt-repository --remove -y ppa:ubuntu-toolchain-r/test
 
-apt remove -y \
-    automake autoconf libtool \
-    software-properties-common
-
 apt autoremove -y && apt clean
 
 rm /etc/apt/apt.conf.d/keep-cache

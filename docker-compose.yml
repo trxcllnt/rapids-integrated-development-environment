@@ -11,7 +11,7 @@ x-run-with-gpu: &run_with_gpu
 services:
 
   cpp-builder:
-    image: pauletaylor/rapids-ide:builder-cpp-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    image: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     build:
       context: compose/cpp-builder
       args:
@@ -41,20 +41,19 @@ services:
     build:
       context: compose/code-server
       args:
-        BASE_IMAGE: pauletaylor/rapids-ide:builder-cpp-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     env_file: .env
     environment:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
-      DOCKER_USER: "${USER:-coder}"
-      DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
+      DOCKER_USER: "${USER:-coder}"
+      DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
     volumes:
+      - "./compose/code-server/home/.plugins:/opt/rapids/.plugins:ro"
+      - "./compose/code-server/home:${PWD}/compose/code-server/home"
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./compose/code-server/home/.cache:/opt/rapids/.cache"
-      - "./compose/code-server/home/.local:/opt/rapids/.local"
-      - "./compose/code-server/home/.config:/opt/rapids/.config"
     ports:
       - "8080:8080"
     command: --link

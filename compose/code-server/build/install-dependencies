@@ -57,7 +57,7 @@ apt install -y --no-install-recommends      \
     pigz iptables openssl xz-utils          \
     `# code-server dependencies`            \
     `# https://github.com/coder/code-server/blob/5bc26e90cbf17c9e79d5646fd93838fc0082d9ab/ci/release-image/Dockerfile#L4-L19` \
-    lsb-release                             \
+    lsb-release bash-completion             \
     procps openssh-client sudo              \
     dumb-init zsh htop locales man vim nano \
  && git lfs install
