@@ -25,11 +25,9 @@ INTERNAL_SOURCE_DIR="/opt/rapids/$PROJECT";
 
 # Copy external source dir to internal source dir
 (
-    # set -x;
     mkdir -p "$INTERNAL_SOURCE_DIR";
     cp -r "$EXTERNAL_SOURCE_DIR"/* "$INTERNAL_SOURCE_DIR"/;
 ) || true;
-# echo;
 
 INTERNAL_CPP_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")";
 INTERNAL_CPP_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")";
@@ -49,7 +47,6 @@ mkdir -p "$INTERNAL_CPP_BINARY_DIR";
 
 # Move the build dir from its external location to its inner location
 (
-    # set -x;
     SUF="$(realpath -m --relative-to="$EXTERNAL_SOURCE_DIR" "$EXTERNAL_CPP_BINARY_DIR")"
     mkdir -p "$INTERNAL_SOURCE_DIR/$SUF";
     if [[ -d "$INTERNAL_SOURCE_DIR/$SUF" ]]; then
@@ -60,21 +57,3 @@ mkdir -p "$INTERNAL_CPP_BINARY_DIR";
         rm -rf "$tmp_dir";
     fi
 ) || true;
-# echo;
-
-# Replace $EXTERNAL_CPP_BINARY_DIR with $INTERNAL_CPP_BINARY_DIR in binary files
-# (
-#     set -x;
-#     find "$INTERNAL_CPP_BINARY_DIR" -type f -print0 | xargs -0 -I {} -P$J -n1 \
-#         sed -ir "s@$EXTERNAL_CPP_BINARY_DIR@$INTERNAL_CPP_BINARY_DIR@g" {} 2>/dev/null;
-# ) || true;
-# echo;
-
-# Replace $EXTERNAL_CPP_SOURCE_DIR with $INTERNAL_CPP_SOURCE_DIR in source files
-# (
-#     SUF="$(realpath -m --relative-to="$INTERNAL_SOURCE_DIR" "$INTERNAL_CPP_SOURCE_DIR")";
-#     EXTERNAL_CPP_SOURCE_DIR="$(realpath -m "$EXTERNAL_SOURCE_DIR/$SUF")";
-#     set -x;
-#     time find "$INTERNAL_CPP_SOURCE_DIR" -type f -print0 | xargs -0 -P$J -n1 \
-#         sed -i -r "s@$EXTERNAL_CPP_SOURCE_DIR@$INTERNAL_CPP_SOURCE_DIR@g";
-# ) || true

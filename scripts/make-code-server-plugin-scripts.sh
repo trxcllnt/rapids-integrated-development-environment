@@ -6,7 +6,6 @@ cd $(dirname "$(realpath "$0")")/..;
 
 PLUGINS_DIR="compose/code-server/plugins"
 BUILD_IMAGE="pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04"
-REPOS="rmm raft cudf cumlprims_mg cuml cugraph-ops cugraph cuspatial"
 
 get_env_var_name() {
     name="$(echo $1 | tr '[:lower:]' '[:upper:]')";
@@ -15,7 +14,7 @@ get_env_var_name() {
 
 dir_envvars() {
     VARS=""
-    for x in ${REPOS}; do
+    for x in ${@}; do
         name="$(get_env_var_name $x)";
         source_dir="\$HOME/rapids/$x";
         cpp_source_dir="\$(cpp-source-dir-util --project=$x)";
@@ -33,7 +32,7 @@ dir_envvars() {
 
 init_volumes() {
     VOLUMES="volumes=\"\";"
-    for x in ${REPOS}; do
+    for x in ${@}; do
         volume=
         if [[ $x == $1 ]]; then
             volume="-v \$HOME/rapids/$x:\$HOME/rapids/$x "
@@ -48,23 +47,12 @@ init_volumes() {
 
 copy_inputs_cmd() {
     name="$(get_env_var_name $1)";
-    # echo "copy-inputs-util --project=$1 --src=\\\$${name}_SOURCE_DIR --bin=\\\$${name}_CPP_BINARY_DIR";
-    # echo "copy-inputs-util --project=\"$1\" --src=\"\$${name}_SOURCE_DIR\" --bin=\"\$${name}_CPP_BINARY_DIR\"";
-    # echo "copy-inputs-util --project=\\\"$1\\\" --src=\\\"\$${name}_SOURCE_DIR\\\" --bin=\\\"\$${name}_CPP_BINARY_DIR\\\"";
     echo "copy-inputs-util --project=\\\"$1\\\" --src=\\\"\\\$${name}_SOURCE_DIR\\\" --bin=\\\"\\\$${name}_CPP_BINARY_DIR\\\"";
 }
 
 init_copy_input_cmds() {
-    # COPY_INPUT_CMDS="copy_input_cmds=\"\";"
-    # for x in ${REPOS}; do
-    #     COPY_INPUT_CMDS+="
-    # if [[ -d \"\$HOME/rapids/$x\" ]]; then
-    #     copy_input_cmds=\"\${copy_input_cmds:+\$copy_input_cmds && }$(copy_inputs_cmd $x)\";
-    # fi"
-    # done
-    # echo -e "$COPY_INPUT_CMDS"
     COPY_INPUT_CMDS="pids=\"\"; \\"
-    for x in ${REPOS}; do
+    for x in ${@}; do
         COPY_INPUT_CMDS+="
         bash -l <<< \"$(copy_inputs_cmd $x)\" & \\
         pids=\"\${pids:+\$pids }\$!\";";
@@ -76,15 +64,18 @@ init_copy_input_cmds() {
 copy_output_cmd() {
     name="$(get_env_var_name $1)";
     echo "copy-output-util --project=\"$1\" --src=\"\$${name}_CPP_SOURCE_DIR\" --bin=\"\$${name}_CPP_BINARY_DIR\"";
-    # echo "copy-output-util --project=\\\"$1\\\" --src=\\\"\\\$${name}_CPP_SOURCE_DIR\\\" --bin=\\\"\\\$${name}_CPP_BINARY_DIR\\\"";
 }
 
-make_script() {
-    cat << EOF > "$PLUGINS_DIR/$1-cpp/$2"
+make_cpp_script() {
+    name="$1"
+    repo="$2"
+    cmds="$3"
+    deps="${@:4}"
+    cat << EOF > "$PLUGINS_DIR/$repo-cpp/$name"
 #! /usr/bin/env bash
 set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
-if [[ -d "\$HOME/rapids/$1" ]]; then
+if [[ -d "\$HOME/rapids/$repo" ]]; then
 
     tmp_env_file="\$(mktemp)";
     touch "\$HOME/rapids/.env";
@@ -100,70 +91,87 @@ if [[ -d "\$HOME/rapids/$1" ]]; then
 
     set -a && . "\$tmp_env_file" && set +a;
 
-    cpp_bin_dir="\$(cpp-binary-dir-util --project=$1)";
-    cpp_src_dir="\$(cpp-source-dir-util --project=$1)";
-    $(dir_envvars)
+    $(dir_envvars ${deps} $repo)
 
-    $(init_volumes $1)
+    $(init_volumes ${deps} $repo)
 
     docker run \\
         --rm -it --runtime nvidia \\
         --env-file "\$tmp_env_file" \\
         \${volumes} \\
         ${BUILD_IMAGE} \\
-        bash -c '${@:3}';
-
-    if [[ -f "\$cpp_bin_dir/compile_commands.json" ]]; then
-        ln -sf "\$cpp_bin_dir/compile_commands.json" "\$cpp_src_dir/compile_commands.json";
-    fi
+        bash -c '$cmds' _ "\${@}";
 fi
 EOF
 
-    chmod +x "$PLUGINS_DIR/$1-cpp/$2"
+    chmod +x "$PLUGINS_DIR/$repo-cpp/$name"
 }
 
-make_clean_script() {
-    make_script $1 clean "
+make_clean_cpp_script() {
+    echo "generating \`clean-$1-cpp\` script";
+    make_cpp_script clean $1 "
         clean-$1-cpp;";
 }
 
-make_build_script() {
-    make_script $1 build "
-        $(init_copy_input_cmds); \\
-        build-$1-cpp; \\
-        $(copy_output_cmd $1);";
+make_build_cpp_script() {
+    echo "generating \`build-$1-cpp\` script";
+    make_cpp_script build $1 "
+        $(init_copy_input_cmds ${@:2} $1); \\
+        build-$1-cpp \"\${@}\"; \\
+        $(copy_output_cmd $1);" \
+        "${@:2}";
 }
 
-make_compile_script() {
-    make_script $1 compile "
-        $(init_copy_input_cmds); \\
-        compile-$1-cpp; \\
-        $(copy_output_cmd $1);";
+make_compile_cpp_script() {
+    echo "generating \`compile-$1-cpp\` script";
+    make_cpp_script compile $1 "
+        $(init_copy_input_cmds ${@:2} $1); \\
+        compile-$1-cpp \"\${@}\"; \\
+        $(copy_output_cmd $1);" \
+        "${@:2}";
 }
 
-make_configure_script() {
-    make_script $1 configure "
-        $(init_copy_input_cmds); \\
-        configure-$1-cpp; \\
-        $(copy_output_cmd $1);";
+make_configure_cpp_script() {
+    echo "generating \`configure-$1-cpp\` script";
+    make_cpp_script configure $1 "
+        $(init_copy_input_cmds ${@:2} $1); \\
+        configure-$1-cpp \"\${@}\"; \\
+        $(copy_output_cmd $1);" \
+        "${@:2}";
 }
 
-for x in ${REPOS}; do
-    echo "clean-$x-cpp";
-    make_clean_script "$x";
-done
+make_clean_cpp_script rmm;
+make_clean_cpp_script raft;
+make_clean_cpp_script cudf;
+make_clean_cpp_script cumlprims_mg;
+make_clean_cpp_script cuml;
+make_clean_cpp_script cugraph-ops;
+make_clean_cpp_script cugraph;
+make_clean_cpp_script cuspatial;
 
-for x in ${REPOS}; do
-    echo "build-$x-cpp";
-    make_build_script "$x";
-done
+make_build_cpp_script rmm;
+make_build_cpp_script raft rmm;
+make_build_cpp_script cudf rmm;
+make_build_cpp_script cumlprims_mg rmm raft;
+make_build_cpp_script cuml rmm raft cumlprims_mg;
+make_build_cpp_script cugraph-ops rmm raft;
+make_build_cpp_script cugraph rmm raft cugraph-ops;
+make_build_cpp_script cuspatial rmm cudf;
 
-for x in ${REPOS}; do
-    echo "compile-$x-cpp";
-    make_compile_script "$x";
-done
+make_compile_cpp_script rmm;
+make_compile_cpp_script raft rmm;
+make_compile_cpp_script cudf rmm;
+make_compile_cpp_script cumlprims_mg rmm raft;
+make_compile_cpp_script cuml rmm raft cumlprims_mg;
+make_compile_cpp_script cugraph-ops rmm raft;
+make_compile_cpp_script cugraph rmm raft cugraph-ops;
+make_compile_cpp_script cuspatial rmm cudf;
 
-for x in ${REPOS}; do
-    echo "configure-$x-cpp";
-    make_configure_script "$x";
-done
+make_configure_cpp_script rmm;
+make_configure_cpp_script raft rmm;
+make_configure_cpp_script cudf rmm;
+make_configure_cpp_script cumlprims_mg rmm raft;
+make_configure_cpp_script cuml rmm raft cumlprims_mg;
+make_configure_cpp_script cugraph-ops rmm raft;
+make_configure_cpp_script cugraph rmm raft cugraph-ops;
+make_configure_cpp_script cuspatial rmm cudf;

@@ -36,44 +36,33 @@ fi
 
 # Copy internal cpp binary dir to external binary dir
 (
-    # set -x;
     mkdir -p "$INTERNAL_CPP_BINARY_DIR";
     mkdir -p "$EXTERNAL_CPP_BINARY_DIR";
+    mkdir -p "$EXTERNAL_CPP_SOURCE_DIR";
     rm -rf "$EXTERNAL_CPP_BINARY_DIR";
     mv "$INTERNAL_CPP_BINARY_DIR" "$EXTERNAL_CPP_BINARY_DIR";
 ) || true;
-# echo
 
 # Replace $INTERNAL_CPP_BINARY_DIR with $EXTERNAL_CPP_BINARY_DIR in build files
 # Replace $INTERNAL_CPP_SOURCE_DIR with $EXTERNAL_CPP_SOURCE_DIR in source files
 (
-    # set -x;
-    # find "$EXTERNAL_CPP_BINARY_DIR" -type f -print0 | xargs -0 -I {} -P$J -n1 \
-    #     sed -ir "s@$INTERNAL_CPP_BINARY_DIR@$EXTERNAL_CPP_BINARY_DIR@g" {} 2>/dev/null;
-    if [[ -f "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" ]]; then
+    CC_JSON="$EXTERNAL_CPP_BINARY_DIR/compile_commands.json";
+
+    if [[ -f "$CC_JSON" ]]; then
         # Replace $INTERNAL_CPP_BINARY_DIR with $EXTERNAL_CPP_BINARY_DIR in compile_commands.json
-        sed -ir "s@$INTERNAL_CPP_BINARY_DIR@$EXTERNAL_CPP_BINARY_DIR@g" \
-            "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
+        sed -ir "s@$INTERNAL_CPP_BINARY_DIR@$EXTERNAL_CPP_BINARY_DIR@g" "$CC_JSON" 2>/dev/null;
         # Replace $INTERNAL_CPP_SOURCE_DIR with $EXTERNAL_CPP_SOURCE_DIR in compile_commands.json
-        sed -ir "s@$INTERNAL_CPP_SOURCE_DIR@$EXTERNAL_CPP_SOURCE_DIR@g" \
-            "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
-        SUF="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
-        PRE="${EXTERNAL_CPP_SOURCE_DIR%/$SUF}";
+        sed -ir "s@$INTERNAL_CPP_SOURCE_DIR@$EXTERNAL_CPP_SOURCE_DIR@g" "$CC_JSON" 2>/dev/null;
         # Replace /opt/rapids with $HOME/rapids in compile_commands.json
-        sed -ir "s@/opt/rapids@$PRE@g" \
-            "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
-        # # Replace `-isystem=` with `-I` in compile_commands.json
-        # sed -ir "s@-isystem=@-I@g" \
-        #     "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
-        # # Replace `-isystem ` with `-I` in compile_commands.json
-        # sed -ir "s@-isystem @-I@g" \
-        #     "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
+        (
+            SUF="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
+            PRE="${EXTERNAL_CPP_SOURCE_DIR%/$SUF}";
+            sed -ir "s@/opt/rapids@$PRE@g" \ "$CC_JSON" 2>/dev/null;
+        )
+        # Make symlink from cpp source dir to external binary dir's compile_commands.json
+        (
+            cd "$EXTERNAL_CPP_SOURCE_DIR";
+            ln -sf "$(realpath --relative-to="$EXTERNAL_CPP_SOURCE_DIR" "$CC_JSON")"
+        )
     fi
 ) || true;
-# echo
-
-# (
-#     set -x;
-#     time find "$EXTERNAL_CPP_SOURCE_DIR" -type f -print0 | xargs -0 -P$J -n1 \
-#         sed -i -r "s@$INTERNAL_CPP_SOURCE_DIR@$EXTERNAL_CPP_SOURCE_DIR@g";
-# ) 2>/dev/null || true
