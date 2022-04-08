@@ -45,9 +45,6 @@ if [[ -n "${DOCKER_USER_HOME:-}" ]]; then
     fi
 fi
 
-mkdir -p "$HOME/.local/share/code-server"
-ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server"
-
 if [[ ! "$(cat /etc/group | grep -F "docker")" ]]; then
     sudo groupadd -g ${DOCKERD_GROUP:-998} docker
 fi
@@ -99,5 +96,12 @@ if [[ ! "${PORT:-}" ]]; then
 fi
 
 mkdir -p "$HOME/rapids"
+mkdir -p "$HOME/.vscode-server"
+mkdir -p "$HOME/.local/share/code-server"
+
+# Set up symlinks so connecting to this container via VSCode Remote Containers also works
+ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server/data"
+ln -sf "$HOME/.local/share/code-server/extensions" "$HOME/.vscode-server/extensions"
+ln -sf "$HOME/.local/share/code-server/CachedExtensionVSIXs" "$HOME/.vscode-server/extensionsCache"
 
 exec cpp-builder-entrypoint dumb-init /usr/bin/code-server --bind-addr "0.0.0.0:$PORT" "$HOME/rapids" "$@"

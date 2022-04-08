@@ -1,19 +1,8 @@
 z-*
 .env
 
-compose/code-server/home/.ssh
-compose/code-server/home/.vscode-server
-compose/code-server/home/rapids
-compose/code-server/home/.bashrc
-compose/code-server/home/.gnupg
-compose/code-server/home/.eternal_bash_history
-compose/code-server/home/.gitconfig
-
-compose/code-server/home/.cache/*
+compose/code-server/home/*
+!compose/code-server/home/.plugins
 !compose/code-server/home/.cache/.keepDir
-
-compose/code-server/home/.local/*
 !compose/code-server/home/.local/.keepDir
-
-compose/code-server/home/.config/*
 !compose/code-server/home/.config/.keepDir
