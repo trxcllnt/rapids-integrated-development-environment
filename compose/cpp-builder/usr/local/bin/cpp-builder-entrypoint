@@ -6,16 +6,30 @@
 
     mkdir -p $bin_dir $plugins
 
-    for plugin in $(find "$plugins" -maxdepth 1 -type d | tail -n+2); do
-        dir="$(basename "$plugin")"
-        for file in $(find "$plugin" -maxdepth 1 -type f); do
-            cmd="$(basename "$file")"
-            link="$bin_dir/$cmd-$dir"
-            if [[ ! -f "$link" ]]; then
-                ln -s "$file" "$link"
-            fi
-        done
-    done
+    _reverse() {
+        ary=${@}; eval eval echo "'\"\${ary['{$((${#ary[@]}-1))..0}']}\"'";
+    }
+    _join() {
+        local IFS='' delim=$1; shift; echo -n "$1"; shift; echo -n "${*/#/$delim}";
+    }
+
+    # Transform path to each plugin command of the form:
+    #   `$plugins/rmm/cpp/build`
+    # into symlinks of the form:
+    #   `$bin_dir/build-rmm-cpp`
+
+    for path in $(find "$plugins" -type f); do
+        orig="$(realpath -m "$path")"
+        path="${path#$plugins/}";
+        # split dirname into array on /
+        ary=$(IFS=/; echo $(dirname "$path"));
+        # reverse the array and join the contents
+        cmd=$(_join - $(basename "$path") $(_reverse $ary));
+        # create the symlink
+        if [[ ! -f "$bin_dir/$cmd" ]]; then
+            ln -s "$orig" "$bin_dir/$cmd"
+        fi
+    done;
 )
 
 exec "$@"

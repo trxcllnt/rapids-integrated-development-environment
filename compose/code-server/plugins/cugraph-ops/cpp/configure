@@ -1,0 +1,58 @@
+#! /usr/bin/env bash
+set -Eeo pipefail;
+cd "$(dirname "$(realpath "$0")")";
+if [[ -d "$HOME/rapids/cugraph-ops" ]]; then
+
+    tmp_env_file="$(mktemp)";
+    touch "$HOME/rapids/.env";
+    cp "$HOME/rapids/.env" "$tmp_env_file";
+
+    on_exit() {
+        ERRCODE="$?";
+        rm -f "$tmp_env_file" >/dev/null 2>&1 || true;
+        exit "$ERRCODE";
+    }
+
+    trap on_exit ERR EXIT HUP INT QUIT TERM STOP PWR;
+
+    set -a && . "$tmp_env_file" && set +a;
+    
+    if [[ -d "$HOME/rapids/rmm" ]]; then
+        echo "RMM_SOURCE_DIR=$HOME/rapids/rmm" >> "$tmp_env_file";
+        echo "RMM_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=rmm)" >> "$tmp_env_file";
+        echo "RMM_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=rmm)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/raft" ]]; then
+        echo "RAFT_SOURCE_DIR=$HOME/rapids/raft" >> "$tmp_env_file";
+        echo "RAFT_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=raft)" >> "$tmp_env_file";
+        echo "RAFT_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=raft)" >> "$tmp_env_file";
+    fi
+    if [[ -d "$HOME/rapids/cugraph-ops" ]]; then
+        echo "CUGRAPH_OPS_SOURCE_DIR=$HOME/rapids/cugraph-ops" >> "$tmp_env_file";
+        echo "CUGRAPH_OPS_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cugraph-ops)" >> "$tmp_env_file";
+        echo "CUGRAPH_OPS_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cugraph-ops)" >> "$tmp_env_file";
+    fi
+
+    volumes="";
+    if [[ -d "$HOME/rapids/rmm" ]]; then volumes+="-v $HOME/rapids/rmm:$HOME/rapids/rmm "; fi
+    if [[ -d "$HOME/rapids/raft" ]]; then volumes+="-v $HOME/rapids/raft:$HOME/rapids/raft:ro "; fi
+    if [[ -d "$HOME/rapids/cugraph-ops" ]]; then volumes+="-v $HOME/rapids/cugraph-ops:$HOME/rapids/cugraph-ops:ro "; fi
+
+    docker run \
+        --rm -it --runtime nvidia \
+        --env-file "$tmp_env_file" \
+        --name "configure-cugraph-ops-cpp-$(basename "$tmp_env_file")" \
+        ${volumes} \
+        pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04 \
+        bash -c '
+        pids=""; \
+        bash -l <<< "copy-inputs-util --project=\"rmm\" --src=\"\$RMM_SOURCE_DIR\" --bin=\"\$RMM_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"raft\" --src=\"\$RAFT_SOURCE_DIR\" --bin=\"\$RAFT_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"cugraph-ops\" --src=\"\$CUGRAPH_OPS_SOURCE_DIR\" --bin=\"\$CUGRAPH_OPS_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        wait ${pids}; \
+        configure-cugraph-ops-cpp "${@}"; \
+        copy-output-util --project="cugraph-ops" --src="$CUGRAPH_OPS_CPP_SOURCE_DIR" --bin="$CUGRAPH_OPS_CPP_BINARY_DIR";' _ "${@}";
+fi

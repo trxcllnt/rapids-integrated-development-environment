@@ -71,7 +71,8 @@ make_cpp_script() {
     repo="$2"
     cmds="$3"
     deps="${@:4}"
-    cat << EOF > "$PLUGINS_DIR/$repo-cpp/$name"
+    mkdir -p "$PLUGINS_DIR/$repo/cpp"
+    cat << EOF > "$PLUGINS_DIR/$repo/cpp/$name"
 #! /usr/bin/env bash
 set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
@@ -90,7 +91,6 @@ if [[ -d "\$HOME/rapids/$repo" ]]; then
     trap on_exit ERR EXIT HUP INT QUIT TERM STOP PWR;
 
     set -a && . "\$tmp_env_file" && set +a;
-
     $(dir_envvars ${deps} $repo)
 
     $(init_volumes ${deps} $repo)
@@ -98,13 +98,45 @@ if [[ -d "\$HOME/rapids/$repo" ]]; then
     docker run \\
         --rm -it --runtime nvidia \\
         --env-file "\$tmp_env_file" \\
+        --name "$name-$repo-cpp-\$(basename "\$tmp_env_file")" \\
         \${volumes} \\
         ${BUILD_IMAGE} \\
         bash -c '$cmds' _ "\${@}";
 fi
 EOF
 
-    chmod +x "$PLUGINS_DIR/$repo-cpp/$name"
+    chmod +x "$PLUGINS_DIR/$repo/cpp/$name"
+}
+
+make_clone_script() {
+    repo="$1"
+    cmds="$2"
+    deps="${@:3}"
+    mkdir -p "$PLUGINS_DIR/$repo"
+    cat << EOF > "$PLUGINS_DIR/$repo/clone"
+#! /usr/bin/env bash
+set -Eeo pipefail;
+cd "\$(dirname "\$(realpath "\$0")")";
+GHHOSTS=\"\$HOME/.config/gh/hosts.yml\"
+if [[ ! -f \"\$GHHOSTS\" ]]; then
+    gh auth login;
+fi
+GH_USER=\"\$(grep --color=never 'user:' \"\$GHHOSTS\" | cut -d ':' -f2 | tr -d '[:space:]')\";
+if [[ -n \"$GH_USER\" && ! -d "\$HOME/rapids/$repo" ]]; then
+    $(for dep in $deps; do echo "clone-$dep"; done)
+    FORK=\"\$(gh repo list \$GH_USER --fork --json name --jq '. | map(select(.name == \"$repo\")) | map(.name)[]')\";
+    (
+        cd \"\$HOME/rapids\";
+        if [[ ! \"\$FORK\" ]]; then
+            gh repo fork rapidsai/$repo --clone=true;
+        else
+            gh repo clone \$GH_USER/$repo --clone=true;
+        fi
+    )
+fi
+EOF
+
+    chmod +x "$PLUGINS_DIR/$repo/clone"
 }
 
 make_clean_cpp_script() {
@@ -139,6 +171,15 @@ make_configure_cpp_script() {
         $(copy_output_cmd $1);" \
         "${@:2}";
 }
+
+make_clone_script rmm;
+make_clone_script raft rmm;
+make_clone_script cudf rmm;
+make_clone_script cumlprims_mg rmm raft;
+make_clone_script cuml rmm raft cumlprims_mg;
+make_clone_script cugraph-ops rmm raft;
+make_clone_script cugraph rmm raft cugraph-ops;
+make_clone_script cuspatial rmm cudf;
 
 make_clean_cpp_script rmm;
 make_clean_cpp_script raft;
