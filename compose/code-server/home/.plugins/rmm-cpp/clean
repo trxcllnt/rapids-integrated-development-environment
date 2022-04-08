@@ -62,7 +62,7 @@ if [[ -d "$HOME/rapids/rmm" ]]; then
     fi
 
     volumes="";
-    if [[ -d "$HOME/rapids/rmm" ]]; then volumes+="-v $HOME/rapids/rmm:/opt/rapids/rmm "; fi
+    if [[ -d "$HOME/rapids/rmm" ]]; then volumes+="-v $HOME/rapids/rmm:$HOME/rapids/rmm "; fi
     if [[ -d "$HOME/rapids/raft" ]]; then volumes+="-v $HOME/rapids/raft:$HOME/rapids/raft:ro "; fi
     if [[ -d "$HOME/rapids/cudf" ]]; then volumes+="-v $HOME/rapids/cudf:$HOME/rapids/cudf:ro "; fi
     if [[ -d "$HOME/rapids/cumlprims_mg" ]]; then volumes+="-v $HOME/rapids/cumlprims_mg:$HOME/rapids/cumlprims_mg:ro "; fi
@@ -76,7 +76,8 @@ if [[ -d "$HOME/rapids/rmm" ]]; then
         --env-file "$tmp_env_file" \
         ${volumes} \
         pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04 \
-        bash -c "clean-rmm-cpp";
+        bash -c '
+        clean-rmm-cpp;';
 
     if [[ -f "$cpp_bin_dir/compile_commands.json" ]]; then
         ln -sf "$cpp_bin_dir/compile_commands.json" "$cpp_src_dir/compile_commands.json";

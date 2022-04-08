@@ -31,12 +31,12 @@ dir_envvars() {
     echo -e "$VARS"
 }
 
-get_volumes() {
+init_volumes() {
     VOLUMES="volumes=\"\";"
     for x in ${REPOS}; do
         volume=
         if [[ $x == $1 ]]; then
-            volume="-v \$HOME/rapids/$x:/opt/rapids/$x "
+            volume="-v \$HOME/rapids/$x:\$HOME/rapids/$x "
         else
             volume="-v \$HOME/rapids/$x:\$HOME/rapids/$x:ro "
         fi
@@ -48,12 +48,35 @@ get_volumes() {
 
 copy_inputs_cmd() {
     name="$(get_env_var_name $1)";
+    # echo "copy-inputs-util --project=$1 --src=\\\$${name}_SOURCE_DIR --bin=\\\$${name}_CPP_BINARY_DIR";
+    # echo "copy-inputs-util --project=\"$1\" --src=\"\$${name}_SOURCE_DIR\" --bin=\"\$${name}_CPP_BINARY_DIR\"";
+    # echo "copy-inputs-util --project=\\\"$1\\\" --src=\\\"\$${name}_SOURCE_DIR\\\" --bin=\\\"\$${name}_CPP_BINARY_DIR\\\"";
     echo "copy-inputs-util --project=\\\"$1\\\" --src=\\\"\\\$${name}_SOURCE_DIR\\\" --bin=\\\"\\\$${name}_CPP_BINARY_DIR\\\"";
+}
+
+init_copy_input_cmds() {
+    # COPY_INPUT_CMDS="copy_input_cmds=\"\";"
+    # for x in ${REPOS}; do
+    #     COPY_INPUT_CMDS+="
+    # if [[ -d \"\$HOME/rapids/$x\" ]]; then
+    #     copy_input_cmds=\"\${copy_input_cmds:+\$copy_input_cmds && }$(copy_inputs_cmd $x)\";
+    # fi"
+    # done
+    # echo -e "$COPY_INPUT_CMDS"
+    COPY_INPUT_CMDS="pids=\"\"; \\"
+    for x in ${REPOS}; do
+        COPY_INPUT_CMDS+="
+        bash -l <<< \"$(copy_inputs_cmd $x)\" & \\
+        pids=\"\${pids:+\$pids }\$!\";";
+    done
+    echo "$COPY_INPUT_CMDS
+        wait \${pids}";
 }
 
 copy_output_cmd() {
     name="$(get_env_var_name $1)";
-    echo "copy-output-util --project=\\\"$1\\\" --src=\\\"\\\$${name}_CPP_SOURCE_DIR\\\" --bin=\\\"\\\$${name}_CPP_BINARY_DIR\\\"";
+    echo "copy-output-util --project=\"$1\" --src=\"\$${name}_CPP_SOURCE_DIR\" --bin=\"\$${name}_CPP_BINARY_DIR\"";
+    # echo "copy-output-util --project=\\\"$1\\\" --src=\\\"\\\$${name}_CPP_SOURCE_DIR\\\" --bin=\\\"\\\$${name}_CPP_BINARY_DIR\\\"";
 }
 
 make_script() {
@@ -81,14 +104,14 @@ if [[ -d "\$HOME/rapids/$1" ]]; then
     cpp_src_dir="\$(cpp-source-dir-util --project=$1)";
     $(dir_envvars)
 
-    $(get_volumes $1)
+    $(init_volumes $1)
 
     docker run \\
         --rm -it --runtime nvidia \\
         --env-file "\$tmp_env_file" \\
         \${volumes} \\
         ${BUILD_IMAGE} \\
-        bash -c "${@:3}";
+        bash -c '${@:3}';
 
     if [[ -f "\$cpp_bin_dir/compile_commands.json" ]]; then
         ln -sf "\$cpp_bin_dir/compile_commands.json" "\$cpp_src_dir/compile_commands.json";
@@ -100,33 +123,29 @@ EOF
 }
 
 make_clean_script() {
-    make_script $1 clean "clean-$1-cpp"
+    make_script $1 clean "
+        clean-$1-cpp;";
 }
 
 make_build_script() {
     make_script $1 build "
-        $(copy_inputs_cmd $1) \\
-     && clean-$1-cpp \\
-     && build-$1-cpp \\
-     && $(copy_output_cmd $1)\
-";
+        $(init_copy_input_cmds); \\
+        build-$1-cpp; \\
+        $(copy_output_cmd $1);";
 }
 
 make_compile_script() {
     make_script $1 compile "
-        $(copy_inputs_cmd $1) \\
-     && compile-$1-cpp \\
-     && $(copy_output_cmd $1)\
-";
+        $(init_copy_input_cmds); \\
+        compile-$1-cpp; \\
+        $(copy_output_cmd $1);";
 }
 
 make_configure_script() {
     make_script $1 configure "
-        $(copy_inputs_cmd $1) \\
-     && clean-$1-cpp \\
-     && configure-$1-cpp \\
-     && $(copy_output_cmd $1)\
-";
+        $(init_copy_input_cmds); \\
+        configure-$1-cpp; \\
+        $(copy_output_cmd $1);";
 }
 
 for x in ${REPOS}; do

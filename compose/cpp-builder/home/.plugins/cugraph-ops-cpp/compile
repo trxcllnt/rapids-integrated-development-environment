@@ -2,4 +2,4 @@
 
 set -Eeo pipefail
 
-cmake --build ${CUGRAPH_OPS_CPP_BINARY_DIR:-/opt/rapids/cugraph-ops/build} -v -- -j${PARALLEL_LEVEL:-1} all
+cmake --build /opt/rapids/cugraph-ops/build -v -- -j${PARALLEL_LEVEL:-1} all

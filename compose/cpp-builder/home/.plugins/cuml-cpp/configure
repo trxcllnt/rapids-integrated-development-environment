@@ -24,12 +24,12 @@ else
     BUILD_SHARED_LIBS=ON;
 fi
 
-if [[ -d ${CUMLPRIMS_MG_CPP_BINARY_DIR:-/opt/rapids/cumlprims_mg/cpp/build} ]]; then
+if [[ -d /opt/rapids/cumlprims_mg/cpp/build ]]; then
     ENABLE_CUMLPRIMS_MG=ON
     BUILD_CUML_MG_TESTS=${BUILD_TESTS}
     BUILD_CUML_MG_BENCH=${BUILD_BENCH}
     CUMLPRIMS_MG_OPTIONS="\
-    -D cumlprims_mg_ROOT=${CUMLPRIMS_MG_CPP_BINARY_DIR:-/opt/rapids/cumlprims_mg/cpp/build}"
+    -D cumlprims_mg_ROOT=/opt/rapids/cumlprims_mg/cpp/build"
 fi
 
 CUMLPRIMS_MG_OPTIONS="\
@@ -51,11 +51,11 @@ CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
           --log-level=VERBOSE \
-          -S ${CUML_CPP_SOURCE_DIR:-/opt/rapids/cuml/cpp} \
-          -B ${CUML_CPP_BINARY_DIR:-/opt/rapids/cuml/cpp/build} \
+          -S /opt/rapids/cuml/cpp \
+          -B /opt/rapids/cuml/cpp/build \
           \
-          -D rmm_ROOT=${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build} \
-          -D raft_ROOT=${RAFT_CPP_BINARY_DIR:-/opt/rapids/raft/cpp/build} \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
+          -D raft_ROOT=/opt/rapids/raft/cpp/build \
           \
           ${CUMLPRIMS_MG_OPTIONS} \
           \

@@ -26,11 +26,11 @@ fi
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
           --log-level=VERBOSE \
-          -S ${CUSPATIAL_CPP_SOURCE_DIR:-/opt/rapids/cuspatial/cpp} \
-          -B ${CUSPATIAL_CPP_BINARY_DIR:-/opt/rapids/cuspatial/cpp/build} \
+          -S /opt/rapids/cuspatial/cpp \
+          -B /opt/rapids/cuspatial/cpp/build \
           \
-          -D rmm_ROOT=${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build} \
-          -D cudf_ROOT=${CUDF_CPP_BINARY_DIR:-/opt/rapids/cudf/cpp/build} \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
+          -D cudf_ROOT=/opt/rapids/cudf/cpp/build \
           \
           -D BUILD_TESTS=${BUILD_TESTS} \
           -D BUILD_BENCHMARKS=${BUILD_BENCH} \

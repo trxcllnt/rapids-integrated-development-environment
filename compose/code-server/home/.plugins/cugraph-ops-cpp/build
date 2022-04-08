@@ -67,7 +67,7 @@ if [[ -d "$HOME/rapids/cugraph-ops" ]]; then
     if [[ -d "$HOME/rapids/cudf" ]]; then volumes+="-v $HOME/rapids/cudf:$HOME/rapids/cudf:ro "; fi
     if [[ -d "$HOME/rapids/cumlprims_mg" ]]; then volumes+="-v $HOME/rapids/cumlprims_mg:$HOME/rapids/cumlprims_mg:ro "; fi
     if [[ -d "$HOME/rapids/cuml" ]]; then volumes+="-v $HOME/rapids/cuml:$HOME/rapids/cuml:ro "; fi
-    if [[ -d "$HOME/rapids/cugraph-ops" ]]; then volumes+="-v $HOME/rapids/cugraph-ops:/opt/rapids/cugraph-ops "; fi
+    if [[ -d "$HOME/rapids/cugraph-ops" ]]; then volumes+="-v $HOME/rapids/cugraph-ops:$HOME/rapids/cugraph-ops "; fi
     if [[ -d "$HOME/rapids/cugraph" ]]; then volumes+="-v $HOME/rapids/cugraph:$HOME/rapids/cugraph:ro "; fi
     if [[ -d "$HOME/rapids/cuspatial" ]]; then volumes+="-v $HOME/rapids/cuspatial:$HOME/rapids/cuspatial:ro "; fi
 
@@ -76,11 +76,27 @@ if [[ -d "$HOME/rapids/cugraph-ops" ]]; then
         --env-file "$tmp_env_file" \
         ${volumes} \
         pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04 \
-        bash -c "
-        copy-inputs-util --project=\"cugraph-ops\" --src=\"\$CUGRAPH_OPS_SOURCE_DIR\" --bin=\"\$CUGRAPH_OPS_CPP_BINARY_DIR\" \
-     && clean-cugraph-ops-cpp \
-     && build-cugraph-ops-cpp \
-     && copy-output-util --project=\"cugraph-ops\" --src=\"\$CUGRAPH_OPS_CPP_SOURCE_DIR\" --bin=\"\$CUGRAPH_OPS_CPP_BINARY_DIR\"";
+        bash -c '
+        pids=""; \
+        bash -l <<< "copy-inputs-util --project=\"rmm\" --src=\"\$RMM_SOURCE_DIR\" --bin=\"\$RMM_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"raft\" --src=\"\$RAFT_SOURCE_DIR\" --bin=\"\$RAFT_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"cudf\" --src=\"\$CUDF_SOURCE_DIR\" --bin=\"\$CUDF_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"cumlprims_mg\" --src=\"\$CUMLPRIMS_MG_SOURCE_DIR\" --bin=\"\$CUMLPRIMS_MG_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"cuml\" --src=\"\$CUML_SOURCE_DIR\" --bin=\"\$CUML_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"cugraph-ops\" --src=\"\$CUGRAPH_OPS_SOURCE_DIR\" --bin=\"\$CUGRAPH_OPS_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"cugraph\" --src=\"\$CUGRAPH_SOURCE_DIR\" --bin=\"\$CUGRAPH_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        bash -l <<< "copy-inputs-util --project=\"cuspatial\" --src=\"\$CUSPATIAL_SOURCE_DIR\" --bin=\"\$CUSPATIAL_CPP_BINARY_DIR\"" & \
+        pids="${pids:+$pids }$!";
+        wait ${pids}; \
+        build-cugraph-ops-cpp; \
+        copy-output-util --project="cugraph-ops" --src="$CUGRAPH_OPS_CPP_SOURCE_DIR" --bin="$CUGRAPH_OPS_CPP_BINARY_DIR";';
 
     if [[ -f "$cpp_bin_dir/compile_commands.json" ]]; then
         ln -sf "$cpp_bin_dir/compile_commands.json" "$cpp_src_dir/compile_commands.json";

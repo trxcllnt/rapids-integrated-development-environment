@@ -51,6 +51,7 @@ services:
       DOCKER_USER: "${USER:-coder}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
     volumes:
+      - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
       - "./compose/code-server/home/.plugins:/opt/rapids/.plugins:ro"
       - "./compose/code-server/home:${PWD}/compose/code-server/home"
       - "/var/run/docker.sock:/var/run/docker.sock"

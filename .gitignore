@@ -1,8 +1,11 @@
 z-*
 .env
 
+compose/code-server/home/.ssh
+compose/code-server/home/.vscode-server
 compose/code-server/home/rapids
 compose/code-server/home/.bashrc
+compose/code-server/home/.gnupg
 compose/code-server/home/.eternal_bash_history
 compose/code-server/home/.gitconfig
 

@@ -29,10 +29,10 @@ fi
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
           --log-level=VERBOSE \
-          -S ${CUDF_CPP_SOURCE_DIR:-/opt/rapids/cudf/cpp} \
-          -B ${CUDF_CPP_BINARY_DIR:-/opt/rapids/cudf/cpp/build} \
+          -S /opt/rapids/cudf/cpp \
+          -B /opt/rapids/cudf/cpp/build \
           \
-          -D rmm_ROOT=${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build} \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
           \
           -D CUDF_ENABLE_ARROW_S3=OFF \
           -D PER_THREAD_DEFAULT_STREAM=ON \

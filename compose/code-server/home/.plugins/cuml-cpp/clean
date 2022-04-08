@@ -66,7 +66,7 @@ if [[ -d "$HOME/rapids/cuml" ]]; then
     if [[ -d "$HOME/rapids/raft" ]]; then volumes+="-v $HOME/rapids/raft:$HOME/rapids/raft:ro "; fi
     if [[ -d "$HOME/rapids/cudf" ]]; then volumes+="-v $HOME/rapids/cudf:$HOME/rapids/cudf:ro "; fi
     if [[ -d "$HOME/rapids/cumlprims_mg" ]]; then volumes+="-v $HOME/rapids/cumlprims_mg:$HOME/rapids/cumlprims_mg:ro "; fi
-    if [[ -d "$HOME/rapids/cuml" ]]; then volumes+="-v $HOME/rapids/cuml:/opt/rapids/cuml "; fi
+    if [[ -d "$HOME/rapids/cuml" ]]; then volumes+="-v $HOME/rapids/cuml:$HOME/rapids/cuml "; fi
     if [[ -d "$HOME/rapids/cugraph-ops" ]]; then volumes+="-v $HOME/rapids/cugraph-ops:$HOME/rapids/cugraph-ops:ro "; fi
     if [[ -d "$HOME/rapids/cugraph" ]]; then volumes+="-v $HOME/rapids/cugraph:$HOME/rapids/cugraph:ro "; fi
     if [[ -d "$HOME/rapids/cuspatial" ]]; then volumes+="-v $HOME/rapids/cuspatial:$HOME/rapids/cuspatial:ro "; fi
@@ -76,7 +76,8 @@ if [[ -d "$HOME/rapids/cuml" ]]; then
         --env-file "$tmp_env_file" \
         ${volumes} \
         pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04 \
-        bash -c "clean-cuml-cpp";
+        bash -c '
+        clean-cuml-cpp;';
 
     if [[ -f "$cpp_bin_dir/compile_commands.json" ]]; then
         ln -sf "$cpp_bin_dir/compile_commands.json" "$cpp_src_dir/compile_commands.json";

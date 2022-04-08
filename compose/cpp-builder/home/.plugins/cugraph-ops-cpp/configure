@@ -26,11 +26,11 @@ fi
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
           --log-level=VERBOSE \
-          -S ${CUGRAPH_OPS_CPP_SOURCE_DIR:-/opt/rapids/cugraph-ops} \
-          -B ${CUGRAPH_OPS_CPP_BINARY_DIR:-/opt/rapids/cugraph-ops/build} \
+          -S /opt/rapids/cugraph-ops \
+          -B /opt/rapids/cugraph-ops/build \
           \
-          -D rmm_ROOT=${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build} \
-          -D raft_ROOT=${RAFT_CPP_BINARY_DIR:-/opt/rapids/raft/cpp/build} \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
+          -D raft_ROOT=/opt/rapids/raft/cpp/build \
           \
           -D DETECT_CONDA_ENV=OFF \
           -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \

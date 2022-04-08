@@ -2,11 +2,11 @@
 
 set -Eeo pipefail
 
-if [ -n $(which clean-rmm-cpp) ]; then clean-rmm-cpp; fi;
-if [ -n $(which clean-cudf-cpp) ]; then clean-cudf-cpp; fi;
-if [ -n $(which clean-raft-cpp) ]; then clean-raft-cpp; fi;
-if [ -n $(which clean-cumlprims_mg-cpp) ]; then clean-cumlprims_mg-cpp; fi;
-if [ -n $(which clean-cuml-cpp) ]; then clean-cuml-cpp; fi;
-if [ -n $(which clean-cugraph-ops-cpp) ]; then clean-cugraph-ops-cpp; fi;
-if [ -n $(which clean-cugraph-cpp) ]; then clean-cugraph-cpp; fi;
-if [ -n $(which clean-cuspatial-cpp) ]; then clean-cuspatial-cpp; fi;
+if [ -n $(which clean-rmm-cpp) ]; then (set -x; clean-rmm-cpp); fi;
+if [ -n $(which clean-cudf-cpp) ]; then (set -x; clean-cudf-cpp); fi;
+if [ -n $(which clean-raft-cpp) ]; then (set -x; clean-raft-cpp); fi;
+if [ -n $(which clean-cumlprims_mg-cpp) ]; then (set -x; clean-cumlprims_mg-cpp); fi;
+if [ -n $(which clean-cuml-cpp) ]; then (set -x; clean-cuml-cpp); fi;
+if [ -n $(which clean-cugraph-ops-cpp) ]; then (set -x; clean-cugraph-ops-cpp); fi;
+if [ -n $(which clean-cugraph-cpp) ]; then (set -x; clean-cugraph-cpp); fi;
+if [ -n $(which clean-cuspatial-cpp) ]; then (set -x; clean-cuspatial-cpp); fi;

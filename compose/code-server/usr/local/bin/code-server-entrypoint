@@ -6,23 +6,32 @@ set -Eeuo pipefail
 # Otherwise the current container UID may not exist in the passwd database.
 eval "$(fixuid -q)"
 
-if [[ -n "${DOCKER_USER:-}" ]]; then
-    USER="$DOCKER_USER"
-    if [[ "$USER" != "$(whoami)" ]]; then
-        echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers.d/nopasswd > /dev/null
-        # Unfortunately we cannot change $HOME as we cannot move any bind mounts
-        # nor can we bind mount $HOME into a new home as that requires a privileged container.
-        sudo usermod --login "$USER" rapids
-        sudo groupmod -n "$USER" rapids
-        sudo sed -i "/rapids/d" /etc/sudoers.d/nopasswd
-        sudo sed -i "s/user: rapids/user: $USER/g" /etc/fixuid/config.yml
-        sudo sed -i "s/group: rapids/group: $USER/g" /etc/fixuid/config.yml
-    fi
-fi
+# if [[ -n "${DOCKER_USER:-}" ]]; then
+#     USER="$DOCKER_USER"
+#     if [[ "$USER" != "$(whoami)" ]]; then
+#         echo "$USER ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers.d/nopasswd > /dev/null
+#         # Unfortunately we cannot change $HOME as we cannot move any bind mounts
+#         # nor can we bind mount $HOME into a new home as that requires a privileged container.
+#         # sudo usermod --login "$USER" rapids
+#         # sudo groupmod -n "$USER" rapids
+#         sudo useradd \
+#             --non-unique \
+#             --uid $(id -u) \
+#             --gid $(id -g) \
+#             --no-create-home \
+#             --shell /bin/bash \
+#             --home-dir "$HOME" \
+#             "$USER"
+#         # sudo sed -i "/rapids/d" /etc/sudoers.d/nopasswd
+#         sudo sed -i "s/user: rapids/user: $USER/g" /etc/fixuid/config.yml
+#         sudo sed -i "s/group: rapids/group: $USER/g" /etc/fixuid/config.yml
+#     fi
+# fi
 
 if [[ -n "${DOCKER_USER_HOME:-}" ]]; then
     if [[ "$DOCKER_USER_HOME" != "$HOME" ]]; then
         mkdir -p "$DOCKER_USER_HOME"
+        # sudo usermod -d "$DOCKER_USER_HOME" rapids
         sudo usermod -d "$DOCKER_USER_HOME" "$USER"
         sudo sed -i "s@/opt/rapids@$DOCKER_USER_HOME@g" /etc/fixuid/config.yml
         touch "$HOME"/.{bashrc,eternal_bash_history}
@@ -35,6 +44,9 @@ if [[ -n "${DOCKER_USER_HOME:-}" ]]; then
         HOME="$DOCKER_USER_HOME"
     fi
 fi
+
+mkdir -p "$HOME/.local/share/code-server"
+ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server"
 
 if [[ ! "$(cat /etc/group | grep -F "docker")" ]]; then
     sudo groupadd -g ${DOCKERD_GROUP:-998} docker

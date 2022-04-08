@@ -5,34 +5,75 @@ set -Eeo pipefail
 cd $(dirname "$(realpath "$0")")
 
 PROJECT=
-INTERNAL_BINARY_DIR=
-INTERNAL_SOURCE_DIR=
+EXTERNAL_CPP_BINARY_DIR=
+EXTERNAL_CPP_SOURCE_DIR=
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --project=*) PROJECT="${1#--project=}";;
-        --bin=*) INTERNAL_BINARY_DIR="${1#--bin=}";;
-        --src=*) INTERNAL_SOURCE_DIR="${1#--src=}";;
+        --bin=*) EXTERNAL_CPP_BINARY_DIR="${1#--bin=}";;
+        --src=*) EXTERNAL_CPP_SOURCE_DIR="${1#--src=}";;
         *) ;;
     esac; shift;
 done
 
-EXTERNAL_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")"
-EXTERNAL_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")"
+INTERNAL_CPP_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")"
+INTERNAL_CPP_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")"
 
-if [[ -n "$INTERNAL_SOURCE_DIR" ]]; then
-    if [[ -z "$INTERNAL_BINARY_DIR" ]]; then
-        INTERNAL_BINARY_DIR="$INTERNAL_SOURCE_DIR/build";
-    fi
-    (
-        # set -x;
-
-        bin_suffix="$(realpath -m --relative-to="$INTERNAL_SOURCE_DIR" "$INTERNAL_BINARY_DIR")";
-        EXTERNAL_BINARY_DIR="$EXTERNAL_SOURCE_DIR/$bin_suffix";
-        mkdir -p "$EXTERNAL_BINARY_DIR";
-        rm -rf "$EXTERNAL_BINARY_DIR"/*;
-
-        # Copy internal binary dir to external binary dir
-        cp -r "$INTERNAL_BINARY_DIR"/* "$EXTERNAL_BINARY_DIR"/;
-    )
+if [[ ! -n "$INTERNAL_CPP_BINARY_DIR" || ! -d "$INTERNAL_CPP_BINARY_DIR" ]]; then
+    exit 1;
 fi
+
+if [[ ! -n "$INTERNAL_CPP_SOURCE_DIR" || ! -d "$INTERNAL_CPP_SOURCE_DIR" ]]; then
+    exit 1;
+fi
+
+J=$(nproc --ignore=2)
+
+if [[ -z "$EXTERNAL_CPP_BINARY_DIR" ]]; then
+    EXTERNAL_CPP_BINARY_DIR="$EXTERNAL_CPP_SOURCE_DIR/build";
+fi
+
+# Copy internal cpp binary dir to external binary dir
+(
+    # set -x;
+    mkdir -p "$INTERNAL_CPP_BINARY_DIR";
+    mkdir -p "$EXTERNAL_CPP_BINARY_DIR";
+    rm -rf "$EXTERNAL_CPP_BINARY_DIR";
+    mv "$INTERNAL_CPP_BINARY_DIR" "$EXTERNAL_CPP_BINARY_DIR";
+) || true;
+# echo
+
+# Replace $INTERNAL_CPP_BINARY_DIR with $EXTERNAL_CPP_BINARY_DIR in build files
+# Replace $INTERNAL_CPP_SOURCE_DIR with $EXTERNAL_CPP_SOURCE_DIR in source files
+(
+    # set -x;
+    # find "$EXTERNAL_CPP_BINARY_DIR" -type f -print0 | xargs -0 -I {} -P$J -n1 \
+    #     sed -ir "s@$INTERNAL_CPP_BINARY_DIR@$EXTERNAL_CPP_BINARY_DIR@g" {} 2>/dev/null;
+    if [[ -f "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" ]]; then
+        # Replace $INTERNAL_CPP_BINARY_DIR with $EXTERNAL_CPP_BINARY_DIR in compile_commands.json
+        sed -ir "s@$INTERNAL_CPP_BINARY_DIR@$EXTERNAL_CPP_BINARY_DIR@g" \
+            "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
+        # Replace $INTERNAL_CPP_SOURCE_DIR with $EXTERNAL_CPP_SOURCE_DIR in compile_commands.json
+        sed -ir "s@$INTERNAL_CPP_SOURCE_DIR@$EXTERNAL_CPP_SOURCE_DIR@g" \
+            "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
+        SUF="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
+        PRE="${EXTERNAL_CPP_SOURCE_DIR%/$SUF}";
+        # Replace /opt/rapids with $HOME/rapids in compile_commands.json
+        sed -ir "s@/opt/rapids@$PRE@g" \
+            "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
+        # # Replace `-isystem=` with `-I` in compile_commands.json
+        # sed -ir "s@-isystem=@-I@g" \
+        #     "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
+        # # Replace `-isystem ` with `-I` in compile_commands.json
+        # sed -ir "s@-isystem @-I@g" \
+        #     "$EXTERNAL_CPP_BINARY_DIR/compile_commands.json" 2>/dev/null;
+    fi
+) || true;
+# echo
+
+# (
+#     set -x;
+#     time find "$EXTERNAL_CPP_SOURCE_DIR" -type f -print0 | xargs -0 -P$J -n1 \
+#         sed -i -r "s@$INTERNAL_CPP_SOURCE_DIR@$EXTERNAL_CPP_SOURCE_DIR@g";
+# ) 2>/dev/null || true

@@ -2,4 +2,4 @@
 
 set -Eeo pipefail
 
-cmake --build ${CUDF_CPP_BINARY_DIR:-/opt/rapids/cudf/cpp/build} -v -- -j${PARALLEL_LEVEL:-1} all
+cmake --build /opt/rapids/cudf/cpp/build -v -- -j${PARALLEL_LEVEL:-1} all
