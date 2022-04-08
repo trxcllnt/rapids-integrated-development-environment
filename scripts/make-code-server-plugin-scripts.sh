@@ -4,7 +4,7 @@ set -Eeo pipefail
 
 cd $(dirname "$(realpath "$0")")/..;
 
-PLUGINS_DIR="compose/code-server/home/.plugins"
+PLUGINS_DIR="compose/code-server/plugins"
 BUILD_IMAGE="pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04"
 REPOS="rmm raft cudf cumlprims_mg cuml cugraph-ops cugraph cuspatial"
 

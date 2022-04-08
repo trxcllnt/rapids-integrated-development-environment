@@ -23,17 +23,17 @@ services:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
       NVIDIA_DRIVER_CAPABILITIES: all
-    volumes:
-      # - "./compose/cpp-builder/home/.bin:/opt/rapids/.bin:ro"
-      - "./compose/cpp-builder/home/.plugins:/opt/rapids/.plugins:ro"
-      # - "/home/ptaylor/dev/rapids/rmm:/opt/rapids/rmm:rw"
-      # - "/home/ptaylor/dev/rapids/cudf:/opt/rapids/cudf:rw"
-      # - "/home/ptaylor/dev/rapids/raft:/opt/rapids/raft:rw"
-      # - "/home/ptaylor/dev/rapids/cumlprims_mg:/opt/rapids/cumlprims_mg:rw"
-      # - "/home/ptaylor/dev/rapids/cuml:/opt/rapids/cuml:rw"
-      # - "/home/ptaylor/dev/rapids/cugraph-ops:/opt/rapids/cugraph-ops:rw"
-      # - "/home/ptaylor/dev/rapids/cugraph:/opt/rapids/cugraph:rw"
-      # - "/home/ptaylor/dev/rapids/cuspatial:/opt/rapids/cuspatial:rw"
+    # volumes:
+    #   # - "./compose/cpp-builder/home/.bin:/opt/rapids/.bin:ro"
+    #   - "./compose/cpp-builder/plugins:/opt/rapids/.plugins:ro"
+    #   # - "/home/ptaylor/dev/rapids/rmm:/opt/rapids/rmm:rw"
+    #   # - "/home/ptaylor/dev/rapids/cudf:/opt/rapids/cudf:rw"
+    #   # - "/home/ptaylor/dev/rapids/raft:/opt/rapids/raft:rw"
+    #   # - "/home/ptaylor/dev/rapids/cumlprims_mg:/opt/rapids/cumlprims_mg:rw"
+    #   # - "/home/ptaylor/dev/rapids/cuml:/opt/rapids/cuml:rw"
+    #   # - "/home/ptaylor/dev/rapids/cugraph-ops:/opt/rapids/cugraph-ops:rw"
+    #   # - "/home/ptaylor/dev/rapids/cugraph:/opt/rapids/cugraph:rw"
+    #   # - "/home/ptaylor/dev/rapids/cuspatial:/opt/rapids/cuspatial:rw"
     <<: *run_with_gpu
 
   code-server:
@@ -48,12 +48,10 @@ services:
       TERM: "${TERM:-}"
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
-      DOCKER_USER: "${USER:-coder}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
     volumes:
-      - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
-      - "./compose/code-server/home/.plugins:/opt/rapids/.plugins:ro"
       - "./compose/code-server/home:${PWD}/compose/code-server/home"
+      # - "./compose/code-server/plugins:/opt/rapids/.plugins:ro"
       - "/var/run/docker.sock:/var/run/docker.sock"
     ports:
       - "8080:8080"

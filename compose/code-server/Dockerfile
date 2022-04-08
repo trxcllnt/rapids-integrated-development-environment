@@ -62,6 +62,6 @@ ENV USER=rapids
 WORKDIR /opt/rapids
 
 # Add plugins
-COPY --chown=rapids:rapids home/.plugins /opt/rapids/.plugins
+COPY --chown=rapids:rapids plugins /opt/rapids/.plugins
 
 ENTRYPOINT ["dockerd-entrypoint.sh", "code-server-entrypoint"]
