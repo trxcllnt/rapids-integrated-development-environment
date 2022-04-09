@@ -23,8 +23,8 @@ services:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
       NVIDIA_DRIVER_CAPABILITIES: all
-    # volumes:
-    #   - "./compose/cpp-builder/plugins:/opt/rapids/.plugins:ro"
+    volumes:
+      - "./compose/cpp-builder/plugins:/opt/rapids/.plugins:ro"
     <<: *run_with_gpu
 
   code-server:
