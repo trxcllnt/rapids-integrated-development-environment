@@ -73,17 +73,18 @@ if [[ ! "${PORT:-}" ]]; then
     PORT=8080
 fi
 
-mkdir -p "$HOME/rapids/.config"
-mkdir -p "$HOME/.vscode-server"
-mkdir -p "$HOME/.local/share/code-server"
+mkdir -p "$HOME/rapids/.config";
+mkdir -p "$HOME/.vscode-server";
+mkdir -p "$HOME/.local/share/code-server";
 
 # Set up symlinks so connecting to this container via VSCode Remote Containers also works
-ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server/data"
-ln -sf "$HOME/.local/share/code-server/extensions" "$HOME/.vscode-server/extensions"
-ln -sf "$HOME/.local/share/code-server/CachedExtensionVSIXs" "$HOME/.vscode-server/extensionsCache"
+ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server/data";
+ln -sf "$HOME/.local/share/code-server/extensions" "$HOME/.vscode-server/extensions";
+ln -sf "$HOME/.local/share/code-server/CachedExtensionVSIXs" "$HOME/.vscode-server/extensionsCache";
 
-# generate-py-workspace
-generate-cpp-workspace
-# generate-all-workspace
+clone-all;
+# generate-py-workspace;
+generate-cpp-workspace;
+# generate-all-workspace;
 
-exec cpp-builder-entrypoint dumb-init /usr/bin/code-server --bind-addr "0.0.0.0:$PORT" "$HOME/rapids" "$@"
+exec cpp-builder-entrypoint dumb-init /usr/bin/code-server --bind-addr "0.0.0.0:$PORT" "$HOME/rapids" "$@";
