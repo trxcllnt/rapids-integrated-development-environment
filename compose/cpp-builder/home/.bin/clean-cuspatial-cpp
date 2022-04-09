@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-
-set -Eeo pipefail
-
-rm -rf "$(cpp-binary-dir --project=cuspatial)";

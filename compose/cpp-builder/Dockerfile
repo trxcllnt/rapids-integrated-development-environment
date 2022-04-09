@@ -65,8 +65,3 @@ ENV PATH="$PATH:/opt/rapids/.bin"
 ENTRYPOINT ["fixuid", "-q", "cpp-builder-entrypoint"]
 
 CMD ["/bin/bash", "-l"]
-
-# docker run --rm -t <build_hash> \
-#     cd /opt/rapids/cudf/cpp/build && \
-#     cpack -G TGZ && cat CUDF-*.tar.gz \
-# > /builds/CUDF-<build_hash>.tar.gz

@@ -18,22 +18,13 @@ services:
         GCC_VERSION: ${GCC_VERSION:-9}
         UXC_VERSION: ${UXC_VERSION:-1.11}
         BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04
-    env_file: .env
+    # env_file: .env
     environment:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
       NVIDIA_DRIVER_CAPABILITIES: all
     # volumes:
-    #   # - "./compose/cpp-builder/home/.bin:/opt/rapids/.bin:ro"
     #   - "./compose/cpp-builder/plugins:/opt/rapids/.plugins:ro"
-    #   # - "/home/ptaylor/dev/rapids/rmm:/opt/rapids/rmm:rw"
-    #   # - "/home/ptaylor/dev/rapids/cudf:/opt/rapids/cudf:rw"
-    #   # - "/home/ptaylor/dev/rapids/raft:/opt/rapids/raft:rw"
-    #   # - "/home/ptaylor/dev/rapids/cumlprims_mg:/opt/rapids/cumlprims_mg:rw"
-    #   # - "/home/ptaylor/dev/rapids/cuml:/opt/rapids/cuml:rw"
-    #   # - "/home/ptaylor/dev/rapids/cugraph-ops:/opt/rapids/cugraph-ops:rw"
-    #   # - "/home/ptaylor/dev/rapids/cugraph:/opt/rapids/cugraph:rw"
-    #   # - "/home/ptaylor/dev/rapids/cuspatial:/opt/rapids/cuspatial:rw"
     <<: *run_with_gpu
 
   code-server:
@@ -42,10 +33,11 @@ services:
       context: compose/code-server
       args:
         BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
-    env_file: .env
+    # env_file: .env
     environment:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
+      NVIDIA_DRIVER_CAPABILITIES: all
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
@@ -53,48 +45,7 @@ services:
       - "./compose/code-server/home:${PWD}/compose/code-server/home"
       # - "./compose/code-server/plugins:/opt/rapids/.plugins:ro"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    <<: *run_with_gpu
     ports:
       - "8080:8080"
     command: --link
-
-  cpp:
-    tty: true
-    env_file: .env
-    working_dir: "/opt/rapids"
-    image: rapidsai/cpp/ci:${RAPIDS_VERSION:-22.02.00}-cuda${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04-amd64
-    build:
-      context: .
-      dockerfile: dockerfiles/cpp.Dockerfile
-      args:
-        GCC_VERSION: "${GCC_VERSION:-9}"
-        SCCACHE_VERSION: "${SCCACHE_VERSION:-0.2.15}"
-        BUILD_TESTS: "${BUILD_TESTS:-ON}"
-        BUILD_BENCH: "${BUILD_BENCH:-ON}"
-        PARALLEL_LEVEL: "${PARALLEL_LEVEL:-4}"
-        CMAKE_CUDA_ARCHITECTURES: "${CMAKE_CUDA_ARCHITECTURES:-ALL}"
-        SCCACHE_REGION: "${SCCACHE_REGION:-}"
-        SCCACHE_BUCKET: "${SCCACHE_BUCKET:-}"
-        SCCACHE_SERVER_PORT: "${SCCACHE_SERVER_PORT:-4226}"
-        SCCACHE_IDLE_TIMEOUT: "${SCCACHE_IDLE_TIMEOUT:-32768}"
-        AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
-        AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
-        RAPIDS_VERSION: "${RAPIDS_VERSION:-22.02}"
-        RMM_BRANCH: "${RMM_BRANCH:-branch-22.02}"
-        RMM_GIT_REPO: "${RMM_GIT_REPO:-https://github.com/rapidsai/rmm.git}"
-        RAFT_BRANCH: "${RAFT_BRANCH:-branch-22.02}"
-        RAFT_GIT_REPO: "${RAFT_GIT_REPO:-https://github.com/rapidsai/raft.git}"
-        CUDF_BRANCH: "${CUDF_BRANCH:-branch-22.02}"
-        CUDF_GIT_REPO: "${CUDF_GIT_REPO:-https://github.com/rapidsai/cudf.git}"
-        CUML_BRANCH: "${CUML_BRANCH:-branch-22.02}"
-        CUML_GIT_REPO: "${CUML_GIT_REPO:-https://github.com/rapidsai/cuml.git}"
-        CUGRAPH_BRANCH: "${CUGRAPH_BRANCH:-branch-22.02}"
-        CUGRAPH_GIT_REPO: "${CUGRAPH_GIT_REPO:-https://github.com/rapidsai/cugraph.git}"
-        CUSPATIAL_BRANCH: "${CUSPATIAL_BRANCH:-branch-22.02}"
-        CUSPATIAL_GIT_REPO: "${CUSPATIAL_GIT_REPO:-https://github.com/rapidsai/cuspatial.git}"
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04
-    environment:
-      # Colorize the terminal in the container if possible
-      TERM: "${TERM:-}"
-      NVIDIA_DRIVER_CAPABILITIES: all
-      LIBCUDF_KERNEL_CACHE_PATH: "/opt/rapids/.cache/jit"
-    <<: *run_with_gpu
