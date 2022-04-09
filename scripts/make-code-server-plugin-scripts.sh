@@ -149,7 +149,6 @@ if [[ -d "\$HOME/rapids/$repo" ]]; then
 
     $(init_volumes $repo ${deps})
 
-    set -x;
     docker run \\
         --rm -it --runtime nvidia \\
         --env-file "\$tmp_env_file" \\

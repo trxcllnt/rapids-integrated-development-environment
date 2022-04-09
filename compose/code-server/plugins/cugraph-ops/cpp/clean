@@ -41,7 +41,6 @@ if [[ -d "$HOME/rapids/cugraph-ops" ]]; then
     volumes="";
     if [[ -d "$HOME/rapids/cugraph-ops" ]]; then volumes+="-v $HOME/rapids/cugraph-ops:$HOME/rapids/cugraph-ops "; fi
 
-    set -x;
     docker run \
         --rm -it --runtime nvidia \
         --env-file "$tmp_env_file" \

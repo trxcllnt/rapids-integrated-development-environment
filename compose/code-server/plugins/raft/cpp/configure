@@ -47,7 +47,6 @@ if [[ -d "$HOME/rapids/raft" ]]; then
     if [[ -d "$HOME/rapids/raft" ]]; then volumes+="-v $HOME/rapids/raft:$HOME/rapids/raft "; fi
     if [[ -d "$HOME/rapids/rmm" ]]; then volumes+="-v $HOME/rapids/rmm:$HOME/rapids/rmm:ro "; fi
 
-    set -x;
     docker run \
         --rm -it --runtime nvidia \
         --env-file "$tmp_env_file" \

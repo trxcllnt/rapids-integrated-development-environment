@@ -41,7 +41,6 @@ if [[ -d "$HOME/rapids/cuspatial" ]]; then
     volumes="";
     if [[ -d "$HOME/rapids/cuspatial" ]]; then volumes+="-v $HOME/rapids/cuspatial:$HOME/rapids/cuspatial "; fi
 
-    set -x;
     docker run \
         --rm -it --runtime nvidia \
         --env-file "$tmp_env_file" \

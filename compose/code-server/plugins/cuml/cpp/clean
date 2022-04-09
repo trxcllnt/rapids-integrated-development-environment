@@ -41,7 +41,6 @@ if [[ -d "$HOME/rapids/cuml" ]]; then
     volumes="";
     if [[ -d "$HOME/rapids/cuml" ]]; then volumes+="-v $HOME/rapids/cuml:$HOME/rapids/cuml "; fi
 
-    set -x;
     docker run \
         --rm -it --runtime nvidia \
         --env-file "$tmp_env_file" \
