@@ -57,7 +57,7 @@ fi
         (
             SUF="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
             PRE="${EXTERNAL_CPP_SOURCE_DIR%/$SUF}";
-            sed -ir "s@/opt/rapids@$PRE@g" \ "$CC_JSON" 2>/dev/null;
+            sed -ir "s@/opt/rapids@$PRE@g" "$CC_JSON" 2>/dev/null;
         )
         # Make symlink from cpp source dir to external binary dir's compile_commands.json
         (
