@@ -50,7 +50,6 @@ CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
     CXXFLAGS=${CXXFLAGS} \
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
-          --log-level=VERBOSE \
           -S /opt/rapids/cuml/cpp \
           -B /opt/rapids/cuml/cpp/build \
           \

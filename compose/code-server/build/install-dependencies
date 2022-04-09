@@ -96,7 +96,7 @@ update-alternatives --set lldb /usr/bin/lldb-${LLVM_VERSION}
 #######################################################
 # Generate shell completion scripts for GitHub CLI
 #######################################################
-echo "eval \"$(gh completion -s bash)\"" >> /opt/rapids/.bashrc
+echo "eval \"\$(gh completion -s bash)\"" >> /opt/rapids/.bashrc
 
 #######################################################
 # Install code-server

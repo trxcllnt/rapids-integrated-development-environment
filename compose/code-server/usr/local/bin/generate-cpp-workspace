@@ -1,0 +1,192 @@
+#! /usr/bin/env bash
+
+set -Eeuo pipefail
+
+rapids_vscode_cpp_workspace() {
+
+    gen_cpp_build_task() {
+        echo "{
+                \"label\": \"Configure and build $1 C++\",
+                \"type\": \"shell\",
+                \"group\": \"build\",
+                \"command\": \"build-$1-cpp\",
+                \"options\": {
+                    \"cwd\": \"\${input:${1}_cpp_source_dir}\",
+                    \"env\": {
+                        \"BUILD_TYPE\": \"\${input:BUILD_TYPE}\",
+                        \"BUILD_TESTS\": \"\${input:BUILD_TESTS}\",
+                        \"BUILD_BENCH\": \"\${input:BUILD_BENCH}\",
+                    },
+                },
+                \"problemMatcher\": [
+                    { \"owner\": \"cuda-cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 3, \"message\": 4, \"regexp\": \"^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} },
+                    { \"owner\": \"cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 4, \"message\": 5, \"regexp\": \"^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} }
+                ]
+            }";
+    }
+
+    gen_cpp_configure_task() {
+        echo "{
+                \"label\": \"Configure $1 C++\",
+                \"type\": \"shell\",
+                \"group\": \"build\",
+                \"command\": \"configure-$1-cpp\",
+                \"options\": {
+                    \"cwd\": \"\${input:${1}_cpp_source_dir}\",
+                    \"env\": {
+                        \"BUILD_TYPE\": \"\${input:BUILD_TYPE}\",
+                        \"BUILD_TESTS\": \"\${input:BUILD_TESTS}\",
+                        \"BUILD_BENCH\": \"\${input:BUILD_BENCH}\",
+                    },
+                },
+                \"problemMatcher\": []
+            }";
+    }
+
+    gen_cpp_compile_task() {
+        echo "{
+                \"label\": \"Compile $1 C++ (fast)\",
+                \"type\": \"shell\",
+                \"group\": \"build\",
+                \"command\": \"compile-$1-cpp\",
+                \"options\": {
+                    \"cwd\": \"\${input:${1}_cpp_binary_dir}\",
+                },
+                \"problemMatcher\": [
+                    { \"owner\": \"cuda-cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 3, \"message\": 4, \"regexp\": \"^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} },
+                    { \"owner\": \"cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 4, \"message\": 5, \"regexp\": \"^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} }
+                ]
+            }";
+    }
+
+    gen_cpp_source_dir_input() {
+        echo "{
+                \"type\": \"command\",
+                \"id\": \"${1}_cpp_source_dir\",
+                \"command\": \"shellCommand.execute\",
+                \"args\": { \"useFirstResult\": true, \"command\": \"cpp-source-dir-util --project=$1\" }
+            }";
+    }
+
+    gen_cpp_binary_dir_input() {
+        echo "{
+                \"type\": \"command\",
+                \"id\": \"${1}_cpp_binary_dir\",
+                \"command\": \"shellCommand.execute\",
+                \"args\": { \"useFirstResult\": true, \"command\": \"cpp-binary-dir-util --project=$1\" }
+            }";
+    }
+
+cat << EOF
+{
+    "folders": [
+        { "name": ".config", "path": ".config" },
+        { "name": "rmm", "path": "rmm" },
+        { "name": "raft", "path": "raft/cpp" },
+        { "name": "cudf", "path": "cudf/cpp" },
+        { "name": "cugraph-ops", "path": "cugraph-ops" },
+        { "name": "cugraph", "path": "cugraph/cpp" },
+        { "name": "cumlprims_mg", "path": "cumlprims_mg/cpp" },
+        { "name": "cuml", "path": "cuml/cpp" },
+        { "name": "cuspatial", "path": "cuspatial/cpp" },
+    ],
+    "settings": {
+        "git.ignoreLimitWarning": true,
+
+        // Fixes to make the "<ctrl>+<shift>+<B>" tasks list launch instantly
+        "task.autoDetect": "off",
+
+        // doxdocgen doxygen style
+        "doxdocgen.generic.returnTemplate": "@return ",
+
+        "C_Cpp.vcpkg.enabled": false,
+        "C_Cpp.default.cStandard": "gnu17",
+        "C_Cpp.default.cppStandard": "c++17",
+        "C_Cpp.default.compilerArgs": ["-std=c++17"],
+        "C_Cpp.default.compilerPath": "",
+        "C_Cpp.autoAddFileAssociations": false,
+        "C_Cpp.default.compileCommands": "\${workspaceFolder}/compile_commands.json",
+
+        "files.trimFinalNewlines": true,
+        "files.insertFinalNewline": true,
+        "files.associations": {
+            "*.h": "c",
+            "*.hpp": "cpp",
+            "*.cu": "cuda-cpp",
+            "*.cuh": "cuda-cpp",
+            "/usr/include/c++/**/*": "cpp",
+            "**/libcudacxx/include/**/*": "cpp",
+        },
+        "files.watcherExclude": {
+            "**/.git/objects/**": true,
+            "**/.git/subtree-cache/**": true,
+            "**/build/cuda-*": true,
+            "**/build/debug": true,
+            "**/build/release": true,
+            "**/build/relwithdebinfo": true,
+        },
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Configure and build all RAPIDS C++ projects",
+                "type": "shell",
+                "group": "build",
+                "command": "build-all-cpp",
+                "options": { "cwd": "\${env:HOME}/rapids" },
+                "problemMatcher": [
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                ]
+            },
+            {
+                "label": "Recompile all RAPIDS C++ projects (fast)",
+                "type": "shell",
+                "group": "build",
+                "command": "compile-all-cpp",
+                "options": { "cwd": "\${env:HOME}/rapids" },
+                "problemMatcher": [
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                ]
+            },
+$(for x in rmm raft cudf cumlprims_mg cuml cugraph cugraph cuspatial; do echo "\
+            $(gen_cpp_configure_task $x),
+            $(gen_cpp_compile_task $x),
+            $(gen_cpp_build_task $x),"; done;)
+        ],
+        "inputs": [
+            {
+                "id": "BUILD_TYPE",
+                "type": "pickString",
+                "default": "Release",
+                "options": ["Release", "Debug"],
+                "description": "C++ Build Type",
+            },
+            {
+                "id": "BUILD_TESTS",
+                "type": "pickString",
+                "default": "YES",
+                "options": ["YES", "NO"],
+                "description": "Build C++ Tests",
+            },
+            {
+                "id": "BUILD_BENCH",
+                "type": "pickString",
+                "default": "NO",
+                "options": ["YES", "NO"],
+                "description": "Build C++ Benchmarks",
+            },
+$(for x in rmm raft cudf cumlprims_mg cuml cugraph cugraph cuspatial; do echo "\
+            $(gen_cpp_source_dir_input $x),
+            $(gen_cpp_binary_dir_input $x),"; done;)
+        ]
+    }
+}
+EOF
+}
+
+if [ ! -f "$HOME/rapids/cpp.code-workspace" ]; then
+    rapids_vscode_cpp_workspace > "$HOME/rapids/cpp.code-workspace";
+fi

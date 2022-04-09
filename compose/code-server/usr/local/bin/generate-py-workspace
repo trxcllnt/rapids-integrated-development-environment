@@ -1,0 +1,46 @@
+#! /usr/bin/env bash
+
+set -Eeuo pipefail
+
+# rapids_vscode_python_workspace() {
+# cat << EOF
+# {
+#     "folders": [
+#         { "name": "rmm", "path": "rmm/python" },
+#         { "name": "raft", "path": "raft/python" },
+#         { "name": "cudf", "path": "cudf/python" },
+#         { "name": "cugraph-ops", "path": "cugraph-ops/python" },
+#         { "name": "cugraph", "path": "cugraph/python" },
+#         { "name": "cuml", "path": "cuml/python" },
+#         { "name": "cuspatial", "path": "cuspatial/python/cuspatial" }
+#     ],
+#     "settings": {
+#         "git.ignoreLimitWarning": true,
+
+#         // Fixes to make the "<ctrl>+<shift>+<B>" tasks list launch instantly
+#         "task.autoDetect": "off",
+
+#         "C_Cpp.vcpkg.enabled": false,
+#         "C_Cpp.default.cStandard": "gnu17",
+#         "C_Cpp.default.cppStandard": "c++17",
+#         "C_Cpp.default.compilerArgs": ["-std=c++17"],
+#         "C_Cpp.default.compilerPath": "",
+#         "C_Cpp.autoAddFileAssociations": false,
+#         "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+
+#         "files.associations": {
+#             "*.h": "c",
+#             "*.hpp": "cpp",
+#             "*.cu": "cuda-cpp",
+#             "*.cuh": "cuda-cpp",
+#             "/usr/include/c++/**/*": "cpp",
+#             "**/libcudacxx/include/**/*": "cpp",
+#         },
+#     }
+# }
+# EOF
+# }
+
+# if [ ! -f "$HOME/rapids/python.code-workspace" ]; then
+#     rapids_vscode_python_workspace > "$HOME/rapids/python.code-workspace";
+# fi

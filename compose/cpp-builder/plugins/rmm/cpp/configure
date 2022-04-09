@@ -18,7 +18,6 @@ CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
     CXXFLAGS=${CXXFLAGS} \
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
-          --log-level=VERBOSE \
           -S /opt/rapids/rmm \
           -B /opt/rapids/rmm/build \
           \

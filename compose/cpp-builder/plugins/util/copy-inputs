@@ -26,7 +26,7 @@ INTERNAL_SOURCE_DIR="/opt/rapids/$PROJECT";
 # Copy external source dir to internal source dir
 (
     mkdir -p "$INTERNAL_SOURCE_DIR";
-    cp -r "$EXTERNAL_SOURCE_DIR"/* "$INTERNAL_SOURCE_DIR"/;
+    cp -ar "$EXTERNAL_SOURCE_DIR"/* "$INTERNAL_SOURCE_DIR"/;
 ) || true;
 
 INTERNAL_CPP_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")";

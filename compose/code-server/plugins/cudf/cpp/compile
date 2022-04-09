@@ -4,8 +4,22 @@ cd "$(dirname "$(realpath "$0")")";
 if [[ -d "$HOME/rapids/cudf" ]]; then
 
     tmp_env_file="$(mktemp)";
-    touch "$HOME/rapids/.env";
-    cp "$HOME/rapids/.env" "$tmp_env_file";
+    touch "$HOME/rapids/.config/cpp.env" "$tmp_env_file";
+
+    cat "$HOME/rapids/.config/cpp.env" >> "$tmp_env_file";
+
+    if [ -n ${BUILD_TYPE:-} ]; then
+        echo "BUILD_TYPE=$BUILD_TYPE" >> "$tmp_env_file";
+        sed -ir "s/^BUILD_TYPE=\w+\$/BUILD_TYPE=$BUILD_TYPE/g" "$tmp_env_file";
+    fi
+    if [ -n ${BUILD_TESTS:-} ]; then
+        echo "BUILD_TESTS=$BUILD_TESTS" >> "$tmp_env_file";
+        sed -ir "s/^BUILD_TESTS=\w+\$/BUILD_TESTS=$BUILD_TESTS/g" "$tmp_env_file";
+    fi
+    if [ -n ${BUILD_BENCH:-} ]; then
+        echo "BUILD_BENCH=$BUILD_BENCH" >> "$tmp_env_file";
+        sed -ir "s/^BUILD_BENCH=\w+\$/BUILD_BENCH=$BUILD_BENCH/g" "$tmp_env_file";
+    fi
 
     on_exit() {
         ERRCODE="$?";
@@ -15,23 +29,25 @@ if [[ -d "$HOME/rapids/cudf" ]]; then
 
     trap on_exit ERR EXIT HUP INT QUIT TERM STOP PWR;
 
-    set -a && . "$tmp_env_file" && set +a;
-    
-    if [[ -d "$HOME/rapids/rmm" ]]; then
-        echo "RMM_SOURCE_DIR=$HOME/rapids/rmm" >> "$tmp_env_file";
-        echo "RMM_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=rmm)" >> "$tmp_env_file";
-        echo "RMM_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=rmm)" >> "$tmp_env_file";
-    fi
+    (
+    set -a && source "$tmp_env_file" && set +a;
+
     if [[ -d "$HOME/rapids/cudf" ]]; then
         echo "CUDF_SOURCE_DIR=$HOME/rapids/cudf" >> "$tmp_env_file";
         echo "CUDF_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cudf)" >> "$tmp_env_file";
         echo "CUDF_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=cudf)" >> "$tmp_env_file";
     fi
+    if [[ -d "$HOME/rapids/rmm" ]]; then
+        echo "RMM_SOURCE_DIR=$HOME/rapids/rmm" >> "$tmp_env_file";
+        echo "RMM_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=rmm)" >> "$tmp_env_file";
+        echo "RMM_CPP_BINARY_DIR=$(cpp-binary-dir-util --project=rmm)" >> "$tmp_env_file";
+    fi
 
     volumes="";
-    if [[ -d "$HOME/rapids/rmm" ]]; then volumes+="-v $HOME/rapids/rmm:$HOME/rapids/rmm "; fi
-    if [[ -d "$HOME/rapids/cudf" ]]; then volumes+="-v $HOME/rapids/cudf:$HOME/rapids/cudf:ro "; fi
+    if [[ -d "$HOME/rapids/cudf" ]]; then volumes+="-v $HOME/rapids/cudf:$HOME/rapids/cudf "; fi
+    if [[ -d "$HOME/rapids/rmm" ]]; then volumes+="-v $HOME/rapids/rmm:$HOME/rapids/rmm:ro "; fi
 
+    set -x;
     docker run \
         --rm -it --runtime nvidia \
         --env-file "$tmp_env_file" \
@@ -45,6 +61,13 @@ if [[ -d "$HOME/rapids/cudf" ]]; then
         bash -l <<< "copy-inputs-util --project=\"cudf\" --src=\"\$CUDF_SOURCE_DIR\" --bin=\"\$CUDF_CPP_BINARY_DIR\"" & \
         pids="${pids:+$pids }$!";
         wait ${pids}; \
-        compile-cudf-cpp "${@}"; \
+        compile-cudf-cpp "${@}" 2>&1 \
+          | sed -r "s@/opt/rapids/rmm/build@$RMM_CPP_BINARY_DIR@g" \
+          | sed -r "s@$(realpath -m "/opt/rapids/rmm/$(realpath -m --relative-to="$RMM_SOURCE_DIR" "$RMM_CPP_SOURCE_DIR")")@$RMM_CPP_SOURCE_DIR@g" \
+          | sed -r "s@ build/@ $(realpath -m --relative-to="$RMM_CPP_SOURCE_DIR" "$RMM_CPP_BINARY_DIR")/@g" \
+          | sed -r "s@/opt/rapids/cudf/build@$CUDF_CPP_BINARY_DIR@g" \
+          | sed -r "s@$(realpath -m "/opt/rapids/cudf/$(realpath -m --relative-to="$CUDF_SOURCE_DIR" "$CUDF_CPP_SOURCE_DIR")")@$CUDF_CPP_SOURCE_DIR@g" \
+          | sed -r "s@ build/@ $(realpath -m --relative-to="$CUDF_CPP_SOURCE_DIR" "$CUDF_CPP_BINARY_DIR")/@g"; \
         copy-output-util --project="cudf" --src="$CUDF_CPP_SOURCE_DIR" --bin="$CUDF_CPP_BINARY_DIR";' _ "${@}";
+    )
 fi

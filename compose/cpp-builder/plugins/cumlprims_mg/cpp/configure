@@ -25,7 +25,6 @@ fi
     CXXFLAGS=${CXXFLAGS} \
     CUDAFLAGS=${CUDAFLAGS} \
     cmake -GNinja \
-          --log-level=VERBOSE \
           -S /opt/rapids/cumlprims_mg/cpp \
           -B /opt/rapids/cumlprims_mg/cpp/build \
           \

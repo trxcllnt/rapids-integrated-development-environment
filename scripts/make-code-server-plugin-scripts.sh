@@ -19,8 +19,7 @@ dir_envvars() {
         source_dir="\$HOME/rapids/$x";
         cpp_source_dir="\$(cpp-source-dir-util --project=$x)";
         cpp_binary_dir="\$(cpp-binary-dir-util --project=$x)";
-        VARS+="
-    if [[ -d \"$source_dir\" ]]; then
+        VARS="${VARS:+$VARS\n    }if [[ -d \"$source_dir\" ]]; then
         echo \"${name}_SOURCE_DIR=$source_dir\" >> \"\$tmp_env_file\";
         echo \"${name}_CPP_SOURCE_DIR=$cpp_source_dir\" >> \"\$tmp_env_file\";
         echo \"${name}_CPP_BINARY_DIR=$cpp_binary_dir\" >> \"\$tmp_env_file\";
@@ -50,8 +49,8 @@ copy_inputs_cmd() {
     echo "copy-inputs-util --project=\\\"$1\\\" --src=\\\"\\\$${name}_SOURCE_DIR\\\" --bin=\\\"\\\$${name}_CPP_BINARY_DIR\\\"";
 }
 
-init_copy_input_cmds() {
-    COPY_INPUT_CMDS="pids=\"\"; \\"
+copy_input_cmds() {
+    COPY_INPUT_CMDS="pids=\"\"; \\";
     for x in ${@}; do
         COPY_INPUT_CMDS+="
         bash -l <<< \"$(copy_inputs_cmd $x)\" & \\
@@ -61,26 +60,79 @@ init_copy_input_cmds() {
         wait \${pids}";
 }
 
+print_path_rewrites() {
+    PRINT_PATH_REWRITE_CMDS="";
+    for x in ${@}; do
+        name="$(get_env_var_name $x)";
+        inner_src_dir="/opt/rapids/$x";
+        outer_src_dir="\$HOME/rapids/$x";
+        outer_cpp_src_dir="\$${name}_CPP_SOURCE_DIR";
+        outer_cpp_bin_dir="\$${name}_CPP_BINARY_DIR";
+        outer_cpp_bin_dir_relative="\$(realpath -m --relative-to=\"\$${name}_CPP_SOURCE_DIR\" \"\$${name}_CPP_BINARY_DIR\")";
+        inner_cpp_src_dir="\$(realpath -m \"$inner_src_dir/\$(realpath -m --relative-to=\"\$${name}_SOURCE_DIR\" \"\$${name}_CPP_SOURCE_DIR\")\")";
+        inner_cpp_bin_dir="$inner_src_dir/build";
+        PRINT_PATH_REWRITE_CMDS="${PRINT_PATH_REWRITE_CMDS:+$PRINT_PATH_REWRITE_CMDS
+        }echo \"sed -r \\\"s@$inner_cpp_bin_dir@$outer_cpp_bin_dir@g\\\"\";
+        echo \"sed -r \\\"s@$inner_cpp_src_dir@$outer_cpp_src_dir@g\\\"\";
+        echo \"sed -r \\\"s@ build/@ $outer_cpp_bin_dir_relative/@g\\\"\";"
+    done
+    echo "$PRINT_PATH_REWRITE_CMDS"
+}
+
+rewrite_output_paths() {
+    REWRITE_OUTPUT_CMDS="";
+    for x in ${@}; do
+        name="$(get_env_var_name $x)";
+        inner_src_dir="/opt/rapids/$x";
+        outer_src_dir="\$HOME/rapids/$x";
+        outer_cpp_src_dir="\$${name}_CPP_SOURCE_DIR";
+        outer_cpp_bin_dir="\$${name}_CPP_BINARY_DIR";
+        outer_cpp_bin_dir_relative="\$(realpath -m --relative-to=\"\$${name}_CPP_SOURCE_DIR\" \"\$${name}_CPP_BINARY_DIR\")";
+        inner_cpp_src_dir="\$(realpath -m \"$inner_src_dir/\$(realpath -m --relative-to=\"\$${name}_SOURCE_DIR\" \"\$${name}_CPP_SOURCE_DIR\")\")";
+        inner_cpp_bin_dir="$inner_src_dir/build";
+        REWRITE_OUTPUT_CMDS="${REWRITE_OUTPUT_CMDS:+$REWRITE_OUTPUT_CMDS \\
+          | }sed -r \"s@$inner_cpp_bin_dir@$outer_cpp_bin_dir@g\" \\
+          | sed -r \"s@$inner_cpp_src_dir@$outer_cpp_src_dir@g\" \\
+          | sed -r \"s@ build/@ $outer_cpp_bin_dir_relative/@g\""
+    done
+    echo "$REWRITE_OUTPUT_CMDS"
+}
+
 copy_output_cmd() {
     name="$(get_env_var_name $1)";
     echo "copy-output-util --project=\"$1\" --src=\"\$${name}_CPP_SOURCE_DIR\" --bin=\"\$${name}_CPP_BINARY_DIR\"";
 }
 
 make_cpp_script() {
-    name="$1"
-    repo="$2"
-    cmds="$3"
-    deps="${@:4}"
-    mkdir -p "$PLUGINS_DIR/$repo/cpp"
-    cat << EOF > "$PLUGINS_DIR/$repo/cpp/$name"
+    (
+        name="$1";
+        repo="$2";
+        cmds="$3";
+        deps="${@:4}";
+        mkdir -p "$PLUGINS_DIR/$repo/cpp";
+        cat << EOF > "$PLUGINS_DIR/$repo/cpp/$name"
 #! /usr/bin/env bash
 set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 if [[ -d "\$HOME/rapids/$repo" ]]; then
 
     tmp_env_file="\$(mktemp)";
-    touch "\$HOME/rapids/.env";
-    cp "\$HOME/rapids/.env" "\$tmp_env_file";
+    touch "\$HOME/rapids/.config/cpp.env" "\$tmp_env_file";
+
+    cat "\$HOME/rapids/.config/cpp.env" >> "\$tmp_env_file";
+
+    if [ -n \${BUILD_TYPE:-} ]; then
+        echo "BUILD_TYPE=\$BUILD_TYPE" >> "\$tmp_env_file";
+        sed -ir "s/^BUILD_TYPE=\w+\\$/BUILD_TYPE=\$BUILD_TYPE/g" "\$tmp_env_file";
+    fi
+    if [ -n \${BUILD_TESTS:-} ]; then
+        echo "BUILD_TESTS=\$BUILD_TESTS" >> "\$tmp_env_file";
+        sed -ir "s/^BUILD_TESTS=\w+\\$/BUILD_TESTS=\$BUILD_TESTS/g" "\$tmp_env_file";
+    fi
+    if [ -n \${BUILD_BENCH:-} ]; then
+        echo "BUILD_BENCH=\$BUILD_BENCH" >> "\$tmp_env_file";
+        sed -ir "s/^BUILD_BENCH=\w+\\$/BUILD_BENCH=\$BUILD_BENCH/g" "\$tmp_env_file";
+    fi
 
     on_exit() {
         ERRCODE="\$?";
@@ -90,11 +142,14 @@ if [[ -d "\$HOME/rapids/$repo" ]]; then
 
     trap on_exit ERR EXIT HUP INT QUIT TERM STOP PWR;
 
-    set -a && . "\$tmp_env_file" && set +a;
-    $(dir_envvars ${deps} $repo)
+    (
+    set -a && source "\$tmp_env_file" && set +a;
 
-    $(init_volumes ${deps} $repo)
+    $(dir_envvars $repo ${deps})
 
+    $(init_volumes $repo ${deps})
+
+    set -x;
     docker run \\
         --rm -it --runtime nvidia \\
         --env-file "\$tmp_env_file" \\
@@ -102,41 +157,54 @@ if [[ -d "\$HOME/rapids/$repo" ]]; then
         \${volumes} \\
         ${BUILD_IMAGE} \\
         bash -c '$cmds' _ "\${@}";
-fi
-EOF
-
-    chmod +x "$PLUGINS_DIR/$repo/cpp/$name"
-}
-
-make_clone_script() {
-    repo="$1"
-    cmds="$2"
-    deps="${@:3}"
-    mkdir -p "$PLUGINS_DIR/$repo"
-    cat << EOF > "$PLUGINS_DIR/$repo/clone"
-#! /usr/bin/env bash
-set -Eeo pipefail;
-cd "\$(dirname "\$(realpath "\$0")")";
-GHHOSTS=\"\$HOME/.config/gh/hosts.yml\"
-if [[ ! -f \"\$GHHOSTS\" ]]; then
-    gh auth login;
-fi
-GH_USER=\"\$(grep --color=never 'user:' \"\$GHHOSTS\" | cut -d ':' -f2 | tr -d '[:space:]')\";
-if [[ -n \"$GH_USER\" && ! -d "\$HOME/rapids/$repo" ]]; then
-    $(for dep in $deps; do echo "clone-$dep"; done)
-    FORK=\"\$(gh repo list \$GH_USER --fork --json name --jq '. | map(select(.name == \"$repo\")) | map(.name)[]')\";
-    (
-        cd \"\$HOME/rapids\";
-        if [[ ! \"\$FORK\" ]]; then
-            gh repo fork rapidsai/$repo --clone=true;
-        else
-            gh repo clone \$GH_USER/$repo --clone=true;
-        fi
     )
 fi
 EOF
 
-    chmod +x "$PLUGINS_DIR/$repo/clone"
+        chmod +x "$PLUGINS_DIR/$repo/cpp/$name"
+    )
+}
+
+make_clone_script() {
+    echo "generating \`clone-$1\` script";
+    (
+        repo="$1";
+        deps="${@:2}";
+        mkdir -p "$PLUGINS_DIR/$repo";
+        cat << EOF > "$PLUGINS_DIR/$repo/clone"
+#! /usr/bin/env bash
+set -Eeo pipefail;
+cd "\$(dirname "\$(realpath "\$0")")";
+
+GHHOSTS="\$HOME/.config/gh/hosts.yml";
+
+if [[ ! -f "\$GHHOSTS" ]]; then gh auth login; fi
+
+GH_USER="\$(grep --color=never 'user:' "\$GHHOSTS" | cut -d ':' -f2 | tr -d '[:space:]')";
+
+if [[ -n "\$GH_USER" && ! -d "\$HOME/rapids/$repo" ]]; then
+$(for dep in $deps; do echo "    clone-$dep;"; done)
+    REPO="\$GH_USER/$repo";
+    FORK="\$(gh repo list \$GH_USER --fork --json name --jq '. | map(select(.name == "$repo")) | map(.name)[]')";
+    if [[ ! "\$FORK" ]]; then
+        ORIGIN_URL="github.com/\$GH_USER/$repo";
+        UPSTREAM_URL="github.com/rapidsai/$repo";
+        while true; do
+            read -p "\\\`\$UPSTREAM_URL\\\` not found.
+Fork \\\`$UPSTREAM_URL\\\` into \\\`\$ORIGIN_URL\\\` now (y/n)? " CHOICE </dev/tty
+            case \$CHOICE in
+                [Nn]* ) REPO="rapidsai/$repo"; break;;
+                [Yy]* ) gh repo fork rapidsai/$repo --clone=false; break;;
+                * ) echo "Please answer 'y' or 'n'";;
+            esac
+        done;
+    fi
+    gh repo clone \$REPO "\$HOME/rapids/$repo";
+fi
+EOF
+
+        chmod +x "$PLUGINS_DIR/$repo/clone"
+    )
 }
 
 make_clean_cpp_script() {
@@ -147,18 +215,24 @@ make_clean_cpp_script() {
 
 make_build_cpp_script() {
     echo "generating \`build-$1-cpp\` script";
-    make_cpp_script build $1 "
-        $(init_copy_input_cmds ${@:2} $1); \\
-        build-$1-cpp \"\${@}\"; \\
-        $(copy_output_cmd $1);" \
-        "${@:2}";
+    (
+        cat << EOF > "$PLUGINS_DIR/$1/cpp/build"
+#! /usr/bin/env bash
+set -Eeo pipefail;
+cd "\$(dirname "\$(realpath "\$0")")";
+
+configure-$1-cpp && compile-$1-cpp;
+EOF
+        chmod +x "$PLUGINS_DIR/$1/cpp/build"
+    )
 }
 
 make_compile_cpp_script() {
     echo "generating \`compile-$1-cpp\` script";
     make_cpp_script compile $1 "
-        $(init_copy_input_cmds ${@:2} $1); \\
-        compile-$1-cpp \"\${@}\"; \\
+        $(copy_input_cmds ${@:2} $1); \\
+        compile-$1-cpp \"\${@}\" 2>&1 \\
+          | $(rewrite_output_paths ${@:2} $1); \\
         $(copy_output_cmd $1);" \
         "${@:2}";
 }
@@ -166,8 +240,9 @@ make_compile_cpp_script() {
 make_configure_cpp_script() {
     echo "generating \`configure-$1-cpp\` script";
     make_cpp_script configure $1 "
-        $(init_copy_input_cmds ${@:2} $1); \\
-        configure-$1-cpp \"\${@}\"; \\
+        $(copy_input_cmds ${@:2} $1); \\
+        configure-$1-cpp \"\${@}\" 2>&1 \\
+          | $(rewrite_output_paths ${@:2} $1); \\
         $(copy_output_cmd $1);" \
         "${@:2}";
 }

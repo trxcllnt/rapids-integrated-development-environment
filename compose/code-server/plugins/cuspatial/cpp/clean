@@ -4,8 +4,22 @@ cd "$(dirname "$(realpath "$0")")";
 if [[ -d "$HOME/rapids/cuspatial" ]]; then
 
     tmp_env_file="$(mktemp)";
-    touch "$HOME/rapids/.env";
-    cp "$HOME/rapids/.env" "$tmp_env_file";
+    touch "$HOME/rapids/.config/cpp.env" "$tmp_env_file";
+
+    cat "$HOME/rapids/.config/cpp.env" >> "$tmp_env_file";
+
+    if [ -n ${BUILD_TYPE:-} ]; then
+        echo "BUILD_TYPE=$BUILD_TYPE" >> "$tmp_env_file";
+        sed -ir "s/^BUILD_TYPE=\w+\$/BUILD_TYPE=$BUILD_TYPE/g" "$tmp_env_file";
+    fi
+    if [ -n ${BUILD_TESTS:-} ]; then
+        echo "BUILD_TESTS=$BUILD_TESTS" >> "$tmp_env_file";
+        sed -ir "s/^BUILD_TESTS=\w+\$/BUILD_TESTS=$BUILD_TESTS/g" "$tmp_env_file";
+    fi
+    if [ -n ${BUILD_BENCH:-} ]; then
+        echo "BUILD_BENCH=$BUILD_BENCH" >> "$tmp_env_file";
+        sed -ir "s/^BUILD_BENCH=\w+\$/BUILD_BENCH=$BUILD_BENCH/g" "$tmp_env_file";
+    fi
 
     on_exit() {
         ERRCODE="$?";
@@ -15,8 +29,9 @@ if [[ -d "$HOME/rapids/cuspatial" ]]; then
 
     trap on_exit ERR EXIT HUP INT QUIT TERM STOP PWR;
 
-    set -a && . "$tmp_env_file" && set +a;
-    
+    (
+    set -a && source "$tmp_env_file" && set +a;
+
     if [[ -d "$HOME/rapids/cuspatial" ]]; then
         echo "CUSPATIAL_SOURCE_DIR=$HOME/rapids/cuspatial" >> "$tmp_env_file";
         echo "CUSPATIAL_CPP_SOURCE_DIR=$(cpp-source-dir-util --project=cuspatial)" >> "$tmp_env_file";
@@ -26,6 +41,7 @@ if [[ -d "$HOME/rapids/cuspatial" ]]; then
     volumes="";
     if [[ -d "$HOME/rapids/cuspatial" ]]; then volumes+="-v $HOME/rapids/cuspatial:$HOME/rapids/cuspatial "; fi
 
+    set -x;
     docker run \
         --rm -it --runtime nvidia \
         --env-file "$tmp_env_file" \
@@ -34,4 +50,5 @@ if [[ -d "$HOME/rapids/cuspatial" ]]; then
         pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04 \
         bash -c '
         clean-cuspatial-cpp;' _ "${@}";
+    )
 fi
