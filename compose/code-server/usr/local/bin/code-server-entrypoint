@@ -82,9 +82,13 @@ ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server/data";
 ln -sf "$HOME/.local/share/code-server/extensions" "$HOME/.vscode-server/extensions";
 ln -sf "$HOME/.local/share/code-server/CachedExtensionVSIXs" "$HOME/.vscode-server/extensionsCache";
 
+cpp-builder-entrypoint;
 clone-all;
 # generate-py-workspace;
 generate-cpp-workspace;
 # generate-all-workspace;
 
-exec cpp-builder-entrypoint dumb-init /usr/bin/code-server --bind-addr "0.0.0.0:$PORT" "$HOME/rapids" "$@";
+touch "$HOME/rapids/.config/cpp.env";
+touch "$HOME/rapids/.config/python.env";
+
+exec dumb-init /usr/bin/code-server --bind-addr "0.0.0.0:$PORT" "$HOME/rapids" "$@";
