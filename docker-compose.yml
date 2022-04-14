@@ -43,7 +43,7 @@ services:
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
     volumes:
       - "./compose/code-server/home:${PWD}/compose/code-server/home"
-      # - "./compose/code-server/plugins:/opt/rapids/.plugins:ro"
+      - "./compose/code-server/plugins:/opt/rapids/.plugins:ro"
       - "/var/run/docker.sock:/var/run/docker.sock"
     <<: *run_with_gpu
     ports:
