@@ -2,11 +2,8 @@
 
 set -Eeo pipefail
 
-if [ -n $(which build-rmm-cpp) ]; then (set -x; build-rmm-cpp); fi;
-if [ -n $(which build-cudf-cpp) ]; then (set -x; build-cudf-cpp); fi;
-if [ -n $(which build-raft-cpp) ]; then (set -x; build-raft-cpp); fi;
-if [ -n $(which build-cumlprims_mg-cpp) ]; then (set -x; build-cumlprims_mg-cpp); fi;
-if [ -n $(which build-cuml-cpp) ]; then (set -x; build-cuml-cpp); fi;
-if [ -n $(which build-cugraph-ops-cpp) ]; then (set -x; build-cugraph-ops-cpp); fi;
-if [ -n $(which build-cugraph-cpp) ]; then (set -x; build-cugraph-cpp); fi;
-if [ -n $(which build-cuspatial-cpp) ]; then (set -x; build-cuspatial-cpp); fi;
+for repo in $(list-repos); do
+    if [ -n $(which build-$repo-cpp) ]; then
+        (set -x; build-$repo-cpp "$@");
+    fi
+done

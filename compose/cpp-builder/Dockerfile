@@ -24,8 +24,20 @@ ONBUILD ADD https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache
 FROM base-${TARGETARCH}
 
 # Install gdal for cuspatial
-COPY --from=gdal /usr/include/*.h /usr/include/
 COPY --from=gdal /usr/lib/*gdal* /usr/lib/
+COPY --from=gdal /usr/lib/pkgconfig/*gdal* /usr/lib/pkgconfig/
+COPY --from=gdal /usr/include/*cpl*.h /usr/include/
+COPY --from=gdal /usr/include/*gnm*.h /usr/include/
+COPY --from=gdal /usr/include/*ogr*.h /usr/include/
+COPY --from=gdal /usr/include/*gdal*.h /usr/include/
+COPY --from=gdal /usr/include/*dataset*.h /usr/include/
+COPY --from=gdal /usr/include/tiledb /usr/include/tiledb
+COPY --from=gdal /usr/include/libkea /usr/include/libkea
+COPY --from=gdal /usr/include/bsoncxx /usr/include/bsoncxx
+COPY --from=gdal /usr/include/mongocxx /usr/include/mongocxx
+COPY --from=gdal /usr/include/libbson-1.0 /usr/include/libbson-1.0
+COPY --from=gdal /usr/include/libmongoc-1.0 /usr/include/libmongoc-1.0
+COPY --from=gdal /usr/local/include/geodesic.h /usr/local/include/geodesic.h
 
 WORKDIR /
 
@@ -46,8 +58,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
  && clean-up-dependencies
 
 ENV LANG=en_US.UTF-8
-# Needed for CMake's legacy FindPackage(CUDA) when we're using colornvcc
-ENV CUDA_BIN_PATH=${CUDA_HOME}
 # Colorized compiler output
 ENV GCC_COLORS="error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01"
 # Add utility scripts

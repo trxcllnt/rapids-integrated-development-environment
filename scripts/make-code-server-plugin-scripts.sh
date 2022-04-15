@@ -4,6 +4,21 @@ set -Eeo pipefail
 
 cd $(dirname "$(realpath "$0")")/..;
 
+###
+# This is hacky and insane, but it works for now.
+#
+# Generates the scripts in compose/code-server/plugins for the RAPIDS projects
+# These scripts launch builds in the `cpp-builder` image via docker-in-docker,
+# ensuring that only the dependencies of each repo are mounted and copied in.
+#
+# These scripts also modify the stdout lines to map paths from their container-
+# internal paths to their external paths, so it looks like builds are happening
+# at their location on the host. This enables VSCode terminal path links to work.
+#
+# Lastly, the scripts rewrite compile_commands.json internal <-> external paths,
+# enabling intellisense in the `code-server` image.
+###
+
 PLUGINS_DIR="compose/code-server/plugins"
 BUILD_IMAGE="pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04"
 

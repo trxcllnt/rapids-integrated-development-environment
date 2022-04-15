@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+for repo in $(list-repos); do
+    if [ -n $(which clean-$repo-python) ]; then
+        (set -x; clean-$repo-python "$@");
+    fi
+done

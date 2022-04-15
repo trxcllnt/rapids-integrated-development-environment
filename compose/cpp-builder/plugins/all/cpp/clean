@@ -2,11 +2,8 @@
 
 set -Eeo pipefail
 
-if [ -n $(which clean-rmm-cpp) ]; then clean-rmm-cpp; fi;
-if [ -n $(which clean-cudf-cpp) ]; then clean-cudf-cpp; fi;
-if [ -n $(which clean-raft-cpp) ]; then clean-raft-cpp; fi;
-if [ -n $(which clean-cumlprims_mg-cpp) ]; then clean-cumlprims_mg-cpp; fi;
-if [ -n $(which clean-cuml-cpp) ]; then clean-cuml-cpp; fi;
-if [ -n $(which clean-cugraph-ops-cpp) ]; then clean-cugraph-ops-cpp; fi;
-if [ -n $(which clean-cugraph-cpp) ]; then clean-cugraph-cpp; fi;
-if [ -n $(which clean-cuspatial-cpp) ]; then clean-cuspatial-cpp; fi;
+for repo in $(list-repos); do
+    if [ -n $(which clean-$repo-cpp) ]; then
+        (set -x; clean-$repo-cpp "$@");
+    fi
+done

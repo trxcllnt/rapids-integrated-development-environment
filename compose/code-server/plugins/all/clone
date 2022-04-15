@@ -2,11 +2,8 @@
 
 set -Eeo pipefail
 
-if [ -n $(which clone-rmm) ]; then (set -x; clone-rmm); fi;
-if [ -n $(which clone-cudf) ]; then (set -x; clone-cudf); fi;
-if [ -n $(which clone-raft) ]; then (set -x; clone-raft); fi;
-if [ -n $(which clone-cumlprims_mg) ]; then (set -x; clone-cumlprims_mg); fi;
-if [ -n $(which clone-cuml) ]; then (set -x; clone-cuml); fi;
-if [ -n $(which clone-cugraph-ops) ]; then (set -x; clone-cugraph-ops); fi;
-if [ -n $(which clone-cugraph) ]; then (set -x; clone-cugraph); fi;
-if [ -n $(which clone-cuspatial) ]; then (set -x; clone-cuspatial); fi;
+for repo in $(list-repos); do
+    if [ -n $(which clone-$repo) ]; then
+        (set -x; clone-$repo "$@");
+    fi
+done

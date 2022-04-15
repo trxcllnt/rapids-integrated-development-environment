@@ -41,7 +41,7 @@ add-apt-repository --no-update -y ppa:ubuntu-toolchain-r/test
 #######################################################
 apt update
 apt install -y --no-install-recommends          \
-    git sudo nano parallel locales              \
+    git sudo nano locales                       \
     `# JDK for cuDF Java`                       \
     maven openjdk-11-jdk                        \
     `# C++ build tools`                         \
