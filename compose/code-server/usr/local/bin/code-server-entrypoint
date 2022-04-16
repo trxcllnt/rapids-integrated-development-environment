@@ -82,8 +82,7 @@ ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server/data";
 ln -sf "$HOME/.local/share/code-server/extensions" "$HOME/.vscode-server/extensions";
 ln -sf "$HOME/.local/share/code-server/CachedExtensionVSIXs" "$HOME/.vscode-server/extensionsCache";
 
-cpp-builder-entrypoint;
-make-repo-plugins-util;
+make-repo-plugins;
 clone-all;
 # generate-py-workspace;
 generate-cpp-workspace;

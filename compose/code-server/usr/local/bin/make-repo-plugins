@@ -242,6 +242,8 @@ make_configure_cpp_script() {
         "${@:2}";
 }
 
+cpp-builder-entrypoint;
+
 export PLUGINS_DIR;
 export DEFAULT_BUILD_IMAGE;
 export -f get_env_var_name;
