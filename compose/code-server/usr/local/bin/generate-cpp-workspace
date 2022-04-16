@@ -81,14 +81,8 @@ cat << EOF
 {
     "folders": [
         { "name": ".config", "path": ".config" },
-        { "name": "rmm", "path": "rmm" },
-        { "name": "raft", "path": "raft/cpp" },
-        { "name": "cudf", "path": "cudf/cpp" },
-        { "name": "cugraph-ops", "path": "cugraph-ops" },
-        { "name": "cugraph", "path": "cugraph/cpp" },
-        { "name": "cumlprims_mg", "path": "cumlprims_mg/cpp" },
-        { "name": "cuml", "path": "cuml/cpp" },
-        { "name": "cuspatial", "path": "cuspatial/cpp" },
+$(for x in $(list-repos); do echo "\
+        { \"name\": \"$x\", \"path\": \"$(realpath -m --relative-to="$HOME/rapids" "$(cpp-source-dir-util --project=$x)")\" },"; done;)
     ],
     "settings": {
         "git.ignoreLimitWarning": true,
@@ -130,7 +124,7 @@ cat << EOF
         "version": "2.0.0",
         "tasks": [
             {
-                "label": "Configure and build all RAPIDS C++ projects",
+                "label": "Configure and build all C++ projects",
                 "type": "shell",
                 "group": "build",
                 "command": "build-all-cpp",
@@ -141,7 +135,7 @@ cat << EOF
                 ]
             },
             {
-                "label": "Recompile all RAPIDS C++ projects (fast)",
+                "label": "Recompile all C++ projects (fast)",
                 "type": "shell",
                 "group": "build",
                 "command": "compile-all-cpp",
@@ -151,7 +145,7 @@ cat << EOF
                     { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
                 ]
             },
-$(for x in rmm raft cudf cumlprims_mg cuml cugraph cugraph cuspatial; do echo "\
+$(for x in $(list-repos); do echo "\
             $(gen_cpp_configure_task $x),
             $(gen_cpp_compile_task $x),
             $(gen_cpp_build_task $x),"; done;)
@@ -178,7 +172,7 @@ $(for x in rmm raft cudf cumlprims_mg cuml cugraph cugraph cuspatial; do echo "\
                 "options": ["YES", "NO"],
                 "description": "Build C++ Benchmarks",
             },
-$(for x in rmm raft cudf cumlprims_mg cuml cugraph cugraph cuspatial; do echo "\
+$(for x in $(list-repos); do echo "\
             $(gen_cpp_source_dir_input $x),
             $(gen_cpp_binary_dir_input $x),"; done;)
         ]

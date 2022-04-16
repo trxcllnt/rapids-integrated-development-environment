@@ -1,0 +1,26 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+PROJECT=
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --project=*) PROJECT="${1#--project=}"; break;;
+        *) ;;
+    esac; shift;
+done
+
+while true; do
+    case $PROJECT in
+        rmm) break;;
+        raft) echo rmm; break;;
+        cudf) echo rmm; break;;
+        cumlprims_mg) echo rmm raft; break;;
+        cuml) echo rmm raft cumlprims_mg; break;;
+        cugraph-ops) echo rmm raft; break;;
+        cugraph) echo rmm raft cugraph-ops; break;;
+        cuspatial) echo rmm cudf; break;;
+        * ) break;;
+    esac;
+done

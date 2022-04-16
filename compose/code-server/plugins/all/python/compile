@@ -1,9 +1,0 @@
-#! /usr/bin/env bash
-
-set -Eeo pipefail
-
-for repo in $(list-repos); do
-    if [ -n $(which compile-$repo-python) ]; then
-        (set -x; compile-$repo-python "$@");
-    fi
-done

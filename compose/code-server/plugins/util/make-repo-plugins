@@ -19,8 +19,8 @@ cd $(dirname "$(realpath "$0")")/..;
 # enabling intellisense in the `code-server` image.
 ###
 
-PLUGINS_DIR="compose/code-server/plugins"
-BUILD_IMAGE="pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04"
+PLUGINS_DIR="/opt/rapids/.plugins";
+DEFAULT_BUILD_IMAGE="pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04";
 
 get_env_var_name() {
     name="$(echo $1 | tr '[:lower:]' '[:upper:]')";
@@ -73,25 +73,6 @@ copy_input_cmds() {
     done
     echo "$COPY_INPUT_CMDS
         wait \${pids}";
-}
-
-print_path_rewrites() {
-    PRINT_PATH_REWRITE_CMDS="";
-    for x in ${@}; do
-        name="$(get_env_var_name $x)";
-        inner_src_dir="/opt/rapids/$x";
-        outer_src_dir="\$HOME/rapids/$x";
-        outer_cpp_src_dir="\$${name}_CPP_SOURCE_DIR";
-        outer_cpp_bin_dir="\$${name}_CPP_BINARY_DIR";
-        outer_cpp_bin_dir_relative="\$(realpath -m --relative-to=\"\$${name}_CPP_SOURCE_DIR\" \"\$${name}_CPP_BINARY_DIR\")";
-        inner_cpp_src_dir="\$(realpath -m \"$inner_src_dir/\$(realpath -m --relative-to=\"\$${name}_SOURCE_DIR\" \"\$${name}_CPP_SOURCE_DIR\")\")";
-        inner_cpp_bin_dir="$inner_src_dir/build";
-        PRINT_PATH_REWRITE_CMDS="${PRINT_PATH_REWRITE_CMDS:+$PRINT_PATH_REWRITE_CMDS
-        }echo \"sed -r \\\"s@$inner_cpp_bin_dir@$outer_cpp_bin_dir@g\\\"\";
-        echo \"sed -r \\\"s@$inner_cpp_src_dir@$outer_cpp_src_dir@g\\\"\";
-        echo \"sed -r \\\"s@ build/@ $outer_cpp_bin_dir_relative/@g\\\"\";"
-    done
-    echo "$PRINT_PATH_REWRITE_CMDS"
 }
 
 rewrite_output_paths() {
@@ -169,7 +150,7 @@ if [[ -d "\$HOME/rapids/$repo" ]]; then
         --env-file "\$tmp_env_file" \\
         --name "$name-$repo-cpp-\$(basename "\$tmp_env_file")" \\
         \${volumes} \\
-        ${BUILD_IMAGE} \\
+        \${BUILD_IMAGE:-${DEFAULT_BUILD_IMAGE}} \\
         bash -c '$cmds' _ "\${@}";
     )
 fi
@@ -180,7 +161,7 @@ EOF
 }
 
 make_clone_script() {
-    echo "generating \`clone-$1\` script";
+    # echo "generating \`clone-$1\` script";
     (
         repo="$1";
         deps="${@:2}";
@@ -222,13 +203,13 @@ EOF
 }
 
 make_clean_cpp_script() {
-    echo "generating \`clean-$1-cpp\` script";
+    # echo "generating \`clean-$1-cpp\` script";
     make_cpp_script clean $1 "
         clean-$1-cpp;";
 }
 
 make_build_cpp_script() {
-    echo "generating \`build-$1-cpp\` script";
+    # echo "generating \`build-$1-cpp\` script";
     (
         cat << EOF > "$PLUGINS_DIR/$1/cpp/build"
 #! /usr/bin/env bash
@@ -242,7 +223,7 @@ EOF
 }
 
 make_compile_cpp_script() {
-    echo "generating \`compile-$1-cpp\` script";
+    # echo "generating \`compile-$1-cpp\` script";
     make_cpp_script compile $1 "
         $(copy_input_cmds ${@:2} $1); \\
         compile-$1-cpp \"\${@}\" 2>&1 \\
@@ -252,7 +233,7 @@ make_compile_cpp_script() {
 }
 
 make_configure_cpp_script() {
-    echo "generating \`configure-$1-cpp\` script";
+    # echo "generating \`configure-$1-cpp\` script";
     make_cpp_script configure $1 "
         $(copy_input_cmds ${@:2} $1); \\
         configure-$1-cpp \"\${@}\" 2>&1 \\
@@ -261,47 +242,60 @@ make_configure_cpp_script() {
         "${@:2}";
 }
 
-make_clone_script rmm;
-make_clone_script raft rmm;
-make_clone_script cudf rmm;
-make_clone_script cumlprims_mg rmm raft;
-make_clone_script cuml rmm raft cumlprims_mg;
-make_clone_script cugraph-ops rmm raft;
-make_clone_script cugraph rmm raft cugraph-ops;
-make_clone_script cuspatial rmm cudf;
+export PLUGINS_DIR;
+export DEFAULT_BUILD_IMAGE;
+export -f get_env_var_name;
+export -f dir_envvars;
+export -f init_volumes;
+export -f copy_inputs_cmd;
+export -f copy_input_cmds;
+export -f rewrite_output_paths;
+export -f copy_output_cmd;
+export -f make_cpp_script;
+export -f make_clone_script;
+export -f make_clean_cpp_script;
+export -f make_build_cpp_script;
+export -f make_compile_cpp_script;
+export -f make_configure_cpp_script;
 
-make_clean_cpp_script rmm;
-make_clean_cpp_script raft;
-make_clean_cpp_script cudf;
-make_clean_cpp_script cumlprims_mg;
-make_clean_cpp_script cuml;
-make_clean_cpp_script cugraph-ops;
-make_clean_cpp_script cugraph;
-make_clean_cpp_script cuspatial;
+pids=
 
-make_build_cpp_script rmm;
-make_build_cpp_script raft rmm;
-make_build_cpp_script cudf rmm;
-make_build_cpp_script cumlprims_mg rmm raft;
-make_build_cpp_script cuml rmm raft cumlprims_mg;
-make_build_cpp_script cugraph-ops rmm raft;
-make_build_cpp_script cugraph rmm raft cugraph-ops;
-make_build_cpp_script cuspatial rmm cudf;
+for repo in $(list-repos); do
+    deps=$(list-dependencies --project=$repo);
 
-make_compile_cpp_script rmm;
-make_compile_cpp_script raft rmm;
-make_compile_cpp_script cudf rmm;
-make_compile_cpp_script cumlprims_mg rmm raft;
-make_compile_cpp_script cuml rmm raft cumlprims_mg;
-make_compile_cpp_script cugraph-ops rmm raft;
-make_compile_cpp_script cugraph rmm raft cugraph-ops;
-make_compile_cpp_script cuspatial rmm cudf;
+    bash -l <<< "make_clone_script $repo $deps" &
+    pids="${pids:+$pids }$!"
 
-make_configure_cpp_script rmm;
-make_configure_cpp_script raft rmm;
-make_configure_cpp_script cudf rmm;
-make_configure_cpp_script cumlprims_mg rmm raft;
-make_configure_cpp_script cuml rmm raft cumlprims_mg;
-make_configure_cpp_script cugraph-ops rmm raft;
-make_configure_cpp_script cugraph rmm raft cugraph-ops;
-make_configure_cpp_script cuspatial rmm cudf;
+    bash -l <<< "make_build_cpp_script $repo $deps" &
+    pids="${pids:+$pids }$!"
+
+    bash -l <<< "make_clean_cpp_script $repo $deps" &
+    pids="${pids:+$pids }$!"
+
+    bash -l <<< "make_compile_cpp_script $repo $deps" &
+    pids="${pids:+$pids }$!"
+
+    bash -l <<< "make_configure_cpp_script $repo $deps" &
+    pids="${pids:+$pids }$!"
+
+done
+
+wait ${pids};
+
+export -n PLUGINS_DIR;
+export -n DEFAULT_BUILD_IMAGE;
+export -n get_env_var_name;
+export -n dir_envvars;
+export -n init_volumes;
+export -n copy_inputs_cmd;
+export -n copy_input_cmds;
+export -n rewrite_output_paths;
+export -n copy_output_cmd;
+export -n make_cpp_script;
+export -n make_clone_script;
+export -n make_clean_cpp_script;
+export -n make_build_cpp_script;
+export -n make_compile_cpp_script;
+export -n make_configure_cpp_script;
+
+cpp-builder-entrypoint;

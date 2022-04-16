@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-set -Eeo pipefail;
-cd "$(dirname "$(realpath "$0")")";
-
-configure-cuspatial-cpp && compile-cuspatial-cpp;

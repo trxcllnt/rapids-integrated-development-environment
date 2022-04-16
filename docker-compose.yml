@@ -42,8 +42,8 @@ services:
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
     volumes:
+      # - "./compose/code-server/plugins/util/make-repo-plugins:/opt/rapids/.plugins/util/make-repo-plugins:ro"
       - "./compose/code-server/home:${PWD}/compose/code-server/home"
-      - "./compose/code-server/plugins:/opt/rapids/.plugins:ro"
       - "/var/run/docker.sock:/var/run/docker.sock"
     <<: *run_with_gpu
     ports:

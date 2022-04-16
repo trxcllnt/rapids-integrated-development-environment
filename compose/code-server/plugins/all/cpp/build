@@ -1,9 +1,0 @@
-#! /usr/bin/env bash
-
-set -Eeo pipefail
-
-for repo in $(list-repos); do
-    if [ -n $(which build-$repo-cpp) ]; then
-        (set -x; build-$repo-cpp "$@");
-    fi
-done

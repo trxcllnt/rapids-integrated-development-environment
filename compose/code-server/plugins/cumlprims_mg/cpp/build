@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-set -Eeo pipefail;
-cd "$(dirname "$(realpath "$0")")";
-
-configure-cumlprims_mg-cpp && compile-cumlprims_mg-cpp;

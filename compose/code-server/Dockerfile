@@ -63,5 +63,7 @@ WORKDIR /opt/rapids
 
 # Add plugins
 COPY --chown=rapids:rapids plugins /opt/rapids/.plugins
+COPY --chown=rapids:rapids --from=base /opt/rapids/.plugins/all/cpp /opt/rapids/.plugins/all/cpp
+COPY --chown=rapids:rapids --from=base /opt/rapids/.plugins/all/python /opt/rapids/.plugins/all/python
 
 ENTRYPOINT ["dockerd-entrypoint.sh", "code-server-entrypoint"]
