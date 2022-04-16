@@ -2,8 +2,16 @@
 
 set -Eeo pipefail
 
+pids=
+
 for repo in $(list-repos); do
     if [ -n $(which clean-$repo-cpp) ]; then
-        (set -x; clean-$repo-cpp "$@");
+        echo "+ clean-$repo-cpp";
+        bash -l <<< "clean-$repo-cpp" 2>/dev/null &
+        pids="${pids:+$pids }$!"
     fi
 done
+
+if [[ -n "$pids" ]]; then
+    wait ${pids};
+fi

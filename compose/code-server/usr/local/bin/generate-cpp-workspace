@@ -4,19 +4,14 @@ set -Eeuo pipefail
 
 rapids_vscode_cpp_workspace() {
 
-    gen_cpp_build_task() {
+    gen_cpp_clean_task() {
         echo "{
-                \"label\": \"Configure and build $1 C++\",
+                \"label\": \"Clean $1 C++\",
                 \"type\": \"shell\",
                 \"group\": \"build\",
-                \"command\": \"build-$1-cpp\",
+                \"command\": \"clean-$1-cpp\",
                 \"options\": {
                     \"cwd\": \"\${input:${1}_cpp_source_dir}\",
-                    \"env\": {
-                        \"BUILD_TYPE\": \"\${input:BUILD_TYPE}\",
-                        \"BUILD_TESTS\": \"\${input:BUILD_TESTS}\",
-                        \"BUILD_BENCH\": \"\${input:BUILD_BENCH}\",
-                    },
                 },
                 \"problemMatcher\": [
                     { \"owner\": \"cuda-cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 3, \"message\": 4, \"regexp\": \"^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} },
@@ -45,12 +40,33 @@ rapids_vscode_cpp_workspace() {
 
     gen_cpp_compile_task() {
         echo "{
-                \"label\": \"Compile $1 C++ (fast)\",
+                \"label\": \"Compile $1 C++\",
                 \"type\": \"shell\",
                 \"group\": \"build\",
                 \"command\": \"compile-$1-cpp\",
                 \"options\": {
                     \"cwd\": \"\${input:${1}_cpp_binary_dir}\",
+                },
+                \"problemMatcher\": [
+                    { \"owner\": \"cuda-cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 3, \"message\": 4, \"regexp\": \"^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} },
+                    { \"owner\": \"cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 4, \"message\": 5, \"regexp\": \"^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} }
+                ]
+            }";
+    }
+
+    gen_cpp_build_task() {
+        echo "{
+                \"label\": \"Build $1 C++\",
+                \"type\": \"shell\",
+                \"group\": \"build\",
+                \"command\": \"build-$1-cpp\",
+                \"options\": {
+                    \"cwd\": \"\${input:${1}_cpp_source_dir}\",
+                    \"env\": {
+                        \"BUILD_TYPE\": \"\${input:BUILD_TYPE}\",
+                        \"BUILD_TESTS\": \"\${input:BUILD_TESTS}\",
+                        \"BUILD_BENCH\": \"\${input:BUILD_BENCH}\",
+                    },
                 },
                 \"problemMatcher\": [
                     { \"owner\": \"cuda-cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 3, \"message\": 4, \"regexp\": \"^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} },
@@ -124,10 +140,10 @@ $(for x in $(list-repos); do echo "\
         "version": "2.0.0",
         "tasks": [
             {
-                "label": "Configure and build all C++ projects",
+                "label": "Clean all C++",
                 "type": "shell",
                 "group": "build",
-                "command": "build-all-cpp",
+                "command": "clean-all-cpp",
                 "options": { "cwd": "\${env:HOME}/rapids" },
                 "problemMatcher": [
                     { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
@@ -135,7 +151,18 @@ $(for x in $(list-repos); do echo "\
                 ]
             },
             {
-                "label": "Recompile all C++ projects (fast)",
+                "label": "Configure all C++",
+                "type": "shell",
+                "group": "build",
+                "command": "configure-all-cpp",
+                "options": { "cwd": "\${env:HOME}/rapids" },
+                "problemMatcher": [
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                ]
+            },
+            {
+                "label": "Compile all C++",
                 "type": "shell",
                 "group": "build",
                 "command": "compile-all-cpp",
@@ -145,7 +172,19 @@ $(for x in $(list-repos); do echo "\
                     { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
                 ]
             },
+            {
+                "label": "Build all C++",
+                "type": "shell",
+                "group": "build",
+                "command": "build-all-cpp",
+                "options": { "cwd": "\${env:HOME}/rapids" },
+                "problemMatcher": [
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                ]
+            },
 $(for x in $(list-repos); do echo "\
+            $(gen_cpp_clean_task $x),
             $(gen_cpp_configure_task $x),
             $(gen_cpp_compile_task $x),
             $(gen_cpp_build_task $x),"; done;)
