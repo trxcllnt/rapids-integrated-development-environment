@@ -96,9 +96,9 @@ rapids_vscode_cpp_workspace() {
 cat << EOF
 {
     "folders": [
-        { "name": ".config", "path": ".config" },
+        { "name": ".envs", "path": ".envs" },
 $(for x in $(list-repos); do echo "\
-        { \"name\": \"$x\", \"path\": \"$(realpath -m --relative-to="$HOME/rapids" "$(cpp-source-dir-util --project=$x)")\" },"; done;)
+        { \"name\": \"$x\", \"path\": \"$(realpath -m --relative-to="$HOME" "$(cpp-source-dir-util --project=$x)")\" },"; done;)
     ],
     "settings": {
         "git.ignoreLimitWarning": true,
@@ -144,10 +144,10 @@ $(for x in $(list-repos); do echo "\
                 "type": "shell",
                 "group": "build",
                 "command": "clean-all-cpp",
-                "options": { "cwd": "\${env:HOME}/rapids" },
+                "options": { "cwd": "\${env:HOME}" },
                 "problemMatcher": [
-                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
-                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
                 ]
             },
             {
@@ -155,10 +155,10 @@ $(for x in $(list-repos); do echo "\
                 "type": "shell",
                 "group": "build",
                 "command": "configure-all-cpp",
-                "options": { "cwd": "\${env:HOME}/rapids" },
+                "options": { "cwd": "\${env:HOME}" },
                 "problemMatcher": [
-                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
-                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
                 ]
             },
             {
@@ -166,10 +166,10 @@ $(for x in $(list-repos); do echo "\
                 "type": "shell",
                 "group": "build",
                 "command": "compile-all-cpp",
-                "options": { "cwd": "\${env:HOME}/rapids" },
+                "options": { "cwd": "\${env:HOME}" },
                 "problemMatcher": [
-                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
-                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
                 ]
             },
             {
@@ -177,10 +177,10 @@ $(for x in $(list-repos); do echo "\
                 "type": "shell",
                 "group": "build",
                 "command": "build-all-cpp",
-                "options": { "cwd": "\${env:HOME}/rapids" },
+                "options": { "cwd": "\${env:HOME}" },
                 "problemMatcher": [
-                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
-                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}/rapids"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
                 ]
             },
 $(for x in $(list-repos); do echo "\
@@ -220,6 +220,6 @@ $(for x in $(list-repos); do echo "\
 EOF
 }
 
-if [ ! -f "$HOME/rapids/cpp.code-workspace" ]; then
-    rapids_vscode_cpp_workspace > "$HOME/rapids/cpp.code-workspace";
+if [ ! -f "$HOME/cpp.code-workspace" ]; then
+    rapids_vscode_cpp_workspace > "$HOME/cpp.code-workspace";
 fi

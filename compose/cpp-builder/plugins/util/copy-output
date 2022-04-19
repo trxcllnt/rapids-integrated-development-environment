@@ -53,7 +53,7 @@ fi
         sed -ir "s@$INTERNAL_CPP_BINARY_DIR@$EXTERNAL_CPP_BINARY_DIR@g" "$CC_JSON" 2>/dev/null;
         # Replace $INTERNAL_CPP_SOURCE_DIR with $EXTERNAL_CPP_SOURCE_DIR in compile_commands.json
         sed -ir "s@$INTERNAL_CPP_SOURCE_DIR@$EXTERNAL_CPP_SOURCE_DIR@g" "$CC_JSON" 2>/dev/null;
-        # Replace /opt/rapids with $HOME/rapids in compile_commands.json
+        # Replace /opt/rapids with $HOME in compile_commands.json
         (
             SUF="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
             PRE="${EXTERNAL_CPP_SOURCE_DIR%/$SUF}";

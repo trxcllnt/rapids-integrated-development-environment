@@ -57,13 +57,13 @@ EXPOSE 8080
 # This way, if someone sets $DOCKER_USER, docker-exec will still work as
 # the uid will remain the same. note: only relevant if -u isn't passed to
 # docker-run.
-USER rapids:rapids
-ENV USER=rapids
+USER coder:coder
+ENV USER=coder
 WORKDIR /opt/rapids
 
 # Add plugins
-COPY --chown=rapids:rapids plugins /opt/rapids/.plugins
-COPY --chown=rapids:rapids --from=base /opt/rapids/.plugins/all/cpp /opt/rapids/.plugins/all/cpp
-COPY --chown=rapids:rapids --from=base /opt/rapids/.plugins/all/python /opt/rapids/.plugins/all/python
+COPY --chown=coder:coder plugins /opt/rapids/.plugins
+COPY --chown=coder:coder --from=base /opt/rapids/.plugins/all/cpp /opt/rapids/.plugins/all/cpp
+COPY --chown=coder:coder --from=base /opt/rapids/.plugins/all/python /opt/rapids/.plugins/all/python
 
 ENTRYPOINT ["dockerd-entrypoint.sh", "code-server-entrypoint"]

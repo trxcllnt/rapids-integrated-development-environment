@@ -31,7 +31,7 @@ dir_envvars() {
     VARS=""
     for x in ${@}; do
         name="$(get_env_var_name $x)";
-        source_dir="\$HOME/rapids/$x";
+        source_dir="\$HOME/$x";
         cpp_source_dir="\$(cpp-source-dir-util --project=$x)";
         cpp_binary_dir="\$(cpp-binary-dir-util --project=$x)";
         VARS="${VARS:+$VARS\n    }if [[ -d \"$source_dir\" ]]; then
@@ -49,12 +49,12 @@ init_volumes() {
     for x in ${@}; do
         volume=
         if [[ $x == $1 ]]; then
-            volume="-v \$HOME/rapids/$x:\$HOME/rapids/$x "
+            volume="-v \$HOME/$x:\$HOME/$x "
         else
-            volume="-v \$HOME/rapids/$x:\$HOME/rapids/$x:ro "
+            volume="-v \$HOME/$x:\$HOME/$x:ro "
         fi
         VOLUMES+="
-    if [[ -d \"\$HOME/rapids/$x\" ]]; then volumes+=\"$volume\"; fi"
+    if [[ -d \"\$HOME/$x\" ]]; then volumes+=\"$volume\"; fi"
     done
     echo -e "$VOLUMES"
 }
@@ -80,7 +80,7 @@ rewrite_output_paths() {
     for x in ${@}; do
         name="$(get_env_var_name $x)";
         inner_src_dir="/opt/rapids/$x";
-        outer_src_dir="\$HOME/rapids/$x";
+        outer_src_dir="\$HOME/$x";
         outer_cpp_src_dir="\$${name}_CPP_SOURCE_DIR";
         outer_cpp_bin_dir="\$${name}_CPP_BINARY_DIR";
         outer_cpp_bin_dir_relative="\$(realpath -m --relative-to=\"\$${name}_CPP_SOURCE_DIR\" \"\$${name}_CPP_BINARY_DIR\")";
@@ -110,12 +110,12 @@ make_cpp_script() {
 #! /usr/bin/env bash
 set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
-if [[ -d "\$HOME/rapids/$repo" ]]; then
+if [[ -d "\$HOME/$repo" ]]; then
 
     tmp_env_file="\$(mktemp)";
-    touch "\$HOME/rapids/.config/cpp.env" "\$tmp_env_file";
+    touch "\$HOME/.envs/cpp.env" "\$tmp_env_file";
 
-    cat "\$HOME/rapids/.config/cpp.env" >> "\$tmp_env_file";
+    cat "\$HOME/.envs/cpp.env" >> "\$tmp_env_file";
 
     if [ -n \${BUILD_TYPE:-} ]; then
         echo "BUILD_TYPE=\$BUILD_TYPE" >> "\$tmp_env_file";
@@ -177,7 +177,7 @@ if [[ ! -f "\$GHHOSTS" ]]; then gh auth login; fi
 
 GH_USER="\$(grep --color=never 'user:' "\$GHHOSTS" | cut -d ':' -f2 | tr -d '[:space:]')";
 
-if [[ -n "\$GH_USER" && ! -d "\$HOME/rapids/$repo" ]]; then
+if [[ -n "\$GH_USER" && ! -d "\$HOME/$repo" ]]; then
 $(for dep in $deps; do echo "    clone-$dep;"; done)
     REPO="\$GH_USER/$repo";
     FORK="\$(gh repo list \$GH_USER --fork --json name --jq '. | map(select(.name == "$repo")) | map(.name)[]')";
@@ -194,7 +194,7 @@ Fork \\\`$UPSTREAM_URL\\\` into \\\`\$ORIGIN_URL\\\` now (y/n)? " CHOICE </dev/t
             esac
         done;
     fi
-    gh repo clone \$REPO "\$HOME/rapids/$repo";
+    gh repo clone \$REPO "\$HOME/$repo";
 fi
 EOF
 

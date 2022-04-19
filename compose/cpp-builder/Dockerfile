@@ -65,10 +65,10 @@ COPY --chown=root:root usr/local/bin/* /usr/local/bin/
 
 WORKDIR /opt/rapids
 
-USER rapids:rapids
+USER coder:coder
 
 # Add plugins
-COPY --chown=rapids:rapids plugins /opt/rapids/.plugins
+COPY --chown=coder:coder plugins /opt/rapids/.plugins
 
 ENV PATH="$PATH:/opt/rapids/.bin"
 

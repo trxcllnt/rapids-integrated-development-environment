@@ -41,6 +41,6 @@ set -Eeuo pipefail
 # EOF
 # }
 
-# if [ ! -f "$HOME/rapids/python.code-workspace" ]; then
-#     rapids_vscode_python_workspace > "$HOME/rapids/python.code-workspace";
+# if [ ! -f "$HOME/python.code-workspace" ]; then
+#     rapids_vscode_python_workspace > "$HOME/python.code-workspace";
 # fi
