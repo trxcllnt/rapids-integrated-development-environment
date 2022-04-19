@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeo pipefail
+set -Eeou pipefail
 
 PROJECT=
 
@@ -23,7 +23,7 @@ while true; do
     elif [[ "$CPP_DIR" == "$HOME/$PROJECT" ]]; then
         break;
     fi
-    CPP_DIR=$(realpath "$CPP_DIR/..")
+    CPP_DIR=$(realpath -m "$CPP_DIR/..")
 done
 
 echo "$CPP_DIR"

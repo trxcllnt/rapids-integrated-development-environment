@@ -135,6 +135,8 @@ $(for x in $(list-repos); do echo "\
             "**/build/release": true,
             "**/build/relwithdebinfo": true,
         },
+
+        "terminal.integrated.cwd": "\${env:HOME}",
     },
     "tasks": {
         "version": "2.0.0",

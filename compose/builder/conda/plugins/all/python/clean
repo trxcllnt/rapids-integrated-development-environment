@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+pids=
+
+for repo in $(list-repos); do
+    if [ -n $(which clean-$repo-python) ]; then
+        echo "+ clean-$repo-python";
+        script -aqc "clean-$repo-python" /dev/null 1>/dev/null &
+        pids="${pids:+$pids }$!"
+    fi
+done
+
+if [[ -n "$pids" ]]; then
+    wait ${pids};
+fi

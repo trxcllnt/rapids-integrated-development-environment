@@ -1,0 +1,53 @@
+#! /usr/bin/env bash
+
+(
+    bin_dir="/opt/rapids/.bin";
+    plugins="/opt/rapids/.plugins";
+
+    mkdir -p $bin_dir $plugins;
+
+    _reverse() {
+        ary=${@}; eval eval echo "'\"\${ary['{$((${#ary[@]}-1))..0}']}\"'";
+    }
+    _join() {
+        local IFS='' delim=$1; shift; echo -n "$1"; shift; echo -n "${*/#/$delim}";
+    }
+
+    # Transform path to each plugin command of the form:
+    #   `$plugins/rmm/cpp/build`
+    # into symlinks of the form:
+    #   `$bin_dir/build-rmm-cpp`
+
+    for path in $(find "$plugins" -type f); do
+        path="${path#$plugins/}";
+        dirn="$(dirname "$path")";
+        dirn="${dirn#.}";
+        # split dirname into array on /
+        ary=$(IFS=/; echo $dirn);
+        # reverse the array and join the contents
+        cmd=$(_join - $(basename "$path") $(_reverse $ary));
+        # create the symlink
+        if [[ ! -f "$bin_dir/$cmd" ]]; then
+            ln -s "$plugins/$path" "$bin_dir/$cmd";
+        fi
+    done;
+)
+
+# Activate the `base` conda environment.
+. /opt/conda/etc/profile.d/conda.sh
+conda activate base
+
+if [ -e "/opt/rapids/environment.yml" ]; then
+    ENV_NAME="$(cat /opt/rapids/environment.yml | grep name: | cut -d':' -f2 | tr -d '[:space:]')"
+    ENV_NAME="${ENV_NAME:-rapids}"
+    if [ -d "/opt/conda/envs/$ENV_NAME" ]; then
+        echo "Updating environment $ENV_NAME with /opt/rapids/environment.yml"
+        mamba env update -n $ENV_NAME --file /opt/rapids/environment.yml --prune
+    else
+        echo "Creating environment $ENV_NAME with /opt/rapids/environment.yml"
+        mamba env create -n $ENV_NAME --file /opt/rapids/environment.yml || exit $?
+    fi
+    conda activate $ENV_NAME
+fi
+
+exec "$@"

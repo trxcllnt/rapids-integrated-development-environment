@@ -25,7 +25,11 @@ docker run --rm -it --runtime nvidia \
 To build the images, use `docker-compose` with `buildkit`:
 
 ```shell
-DOCKER_BUILDKIT=1 docker-compose build --force-rm cpp-builder code-server
+DOCKER_BUILDKIT=1 docker-compose build --force-rm \
+    cpp-builder \
+    conda-builder \
+    python-builder \
+    code-server
 ```
 
 To run and test `code-server` changes, run this:

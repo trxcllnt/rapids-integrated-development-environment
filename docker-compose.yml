@@ -23,17 +23,34 @@ services:
         GCC_VERSION: ${GCC_VERSION:-9}
         UXC_VERSION: ${UXC_VERSION:-1.11}
         BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04
-    # env_file: .env
     environment:
-      # Colorize the terminal in the container if possible
-      TERM: "${TERM:-}"
-      NVIDIA_DRIVER_CAPABILITIES: all
       <<: *env_common
     volumes:
       - "./compose/builder/cpp/plugins:/opt/rapids/.plugins:ro"
     <<: *run_with_gpu
+
+  conda-builder:
+    image: pauletaylor/rapids-ide:conda-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    build:
+      context: compose/builder/conda
+      args:
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-base-ubuntu20.04
+    environment:
+      <<: *env_common
     volumes:
-      - "./compose/cpp-builder/plugins:/opt/rapids/.plugins:ro"
+      - "./compose/builder/conda/plugins:/opt/rapids/.plugins:ro"
+    <<: *run_with_gpu
+
+  python-builder:
+    image: pauletaylor/rapids-ide:python-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    build:
+      context: compose/builder/python
+      args:
+        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    environment:
+      <<: *env_common
+    volumes:
+      - "./compose/builder/python/plugins:/opt/rapids/.plugins:ro"
     <<: *run_with_gpu
 
   code-server:
@@ -42,6 +59,7 @@ services:
       context: compose/code-server
       args:
         BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+        PYTHON_IMAGE: pauletaylor/rapids-ide:python-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     environment:
       <<: *env_common
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)

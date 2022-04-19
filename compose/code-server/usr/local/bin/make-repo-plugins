@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeo pipefail
+set -Eeou pipefail
 
 cd $(dirname "$(realpath "$0")")/..;
 
@@ -32,12 +32,14 @@ dir_envvars() {
     for x in ${@}; do
         name="$(get_env_var_name $x)";
         source_dir="\$HOME/$x";
-        cpp_source_dir="\$(cpp-source-dir-util --project=$x)";
         cpp_binary_dir="\$(cpp-binary-dir-util --project=$x)";
+        cpp_source_dir="\$(cpp-source-dir-util --project=$x)";
+        python_source_dir="\$(python-source-dir-util --project=$x)";
         VARS="${VARS:+$VARS\n    }if [[ -d \"$source_dir\" ]]; then
         echo \"${name}_SOURCE_DIR=$source_dir\" >> \"\$tmp_env_file\";
-        echo \"${name}_CPP_SOURCE_DIR=$cpp_source_dir\" >> \"\$tmp_env_file\";
         echo \"${name}_CPP_BINARY_DIR=$cpp_binary_dir\" >> \"\$tmp_env_file\";
+        echo \"${name}_CPP_SOURCE_DIR=$cpp_source_dir\" >> \"\$tmp_env_file\";
+        echo \"${name}_PYTHON_SOURCE_DIR=$python_source_dir\" >> \"\$tmp_env_file\";
     fi\
 "
     done
@@ -108,7 +110,7 @@ make_cpp_script() {
         mkdir -p "$PLUGINS_DIR/$repo/cpp";
         cat << EOF > "$PLUGINS_DIR/$repo/cpp/$name"
 #! /usr/bin/env bash
-set -Eeo pipefail;
+set -Eeou pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 if [[ -d "\$HOME/$repo" ]]; then
 
@@ -168,7 +170,7 @@ make_clone_script() {
         mkdir -p "$PLUGINS_DIR/$repo";
         cat << EOF > "$PLUGINS_DIR/$repo/clone"
 #! /usr/bin/env bash
-set -Eeo pipefail;
+set -Eeou pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 
 GHHOSTS="\$HOME/.config/gh/hosts.yml";
@@ -182,14 +184,15 @@ $(for dep in $deps; do echo "    clone-$dep;"; done)
     REPO="\$GH_USER/$repo";
     FORK="\$(gh repo list \$GH_USER --fork --json name --jq '. | map(select(.name == "$repo")) | map(.name)[]')";
     if [[ ! "\$FORK" ]]; then
+        UPSTREAM="$(list-repo-upstream --project=$repo)";
         ORIGIN_URL="github.com/\$GH_USER/$repo";
-        UPSTREAM_URL="github.com/rapidsai/$repo";
+        UPSTREAM_URL="github.com/\$UPSTREAM";
         while true; do
             read -p "\\\`\$UPSTREAM_URL\\\` not found.
 Fork \\\`$UPSTREAM_URL\\\` into \\\`\$ORIGIN_URL\\\` now (y/n)? " CHOICE </dev/tty
             case \$CHOICE in
-                [Nn]* ) REPO="rapidsai/$repo"; break;;
-                [Yy]* ) gh repo fork rapidsai/$repo --clone=false; break;;
+                [Nn]* ) REPO="\$UPSTREAM"; break;;
+                [Yy]* ) gh repo fork \$UPSTREAM --clone=false; break;;
                 * ) echo "Please answer 'y' or 'n'";;
             esac
         done;
@@ -213,7 +216,7 @@ make_build_cpp_script() {
     (
         cat << EOF > "$PLUGINS_DIR/$1/cpp/build"
 #! /usr/bin/env bash
-set -Eeo pipefail;
+set -Eeou pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 
 configure-$1-cpp && compile-$1-cpp;

@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1.3
 
 ARG BASE_IMAGE=pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04
+ARG PYTHON_IMAGE=pauletaylor/rapids-ide:python-builder-cuda11.6.0-ubuntu20.04
 
 FROM ${BASE_IMAGE} as base
+FROM ${PYTHON_IMAGE} as python
 
 FROM base as base-amd64
 
@@ -50,7 +52,7 @@ COPY extensions/augustocdias.tasks-shell-input-1.7.0.vsix /usr/local/src/tasks-s
 COPY extensions/ms-vscode.cpptools-1.9.7@linux-x64.vsix /usr/local/src/ms-vscode.cpptools.vsix
 COPY extensions/NVIDIA.nsight-vscode-edition-2021.1.30130113.vsix /usr/local/src/nsight-vscode.vsix
 
-# Copy in code-server entrypoint
+# Add utility scripts
 COPY --chown=root:root usr/local/bin/* /usr/local/bin/
 
 EXPOSE 8080
@@ -64,6 +66,6 @@ WORKDIR /opt/rapids
 # Add plugins
 COPY --chown=coder:coder plugins /opt/rapids/.plugins
 COPY --chown=coder:coder --from=base /opt/rapids/.plugins/all/cpp /opt/rapids/.plugins/all/cpp
-COPY --chown=coder:coder --from=base /opt/rapids/.plugins/all/python /opt/rapids/.plugins/all/python
+COPY --chown=coder:coder --from=python /opt/rapids/.plugins/all/python /opt/rapids/.plugins/all/python
 
 ENTRYPOINT ["dockerd-entrypoint.sh", "code-server-entrypoint"]

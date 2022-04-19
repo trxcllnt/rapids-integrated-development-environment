@@ -1,0 +1,57 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+# https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
+rm -f /etc/apt/apt.conf.d/docker-clean;
+echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+#######################################################
+# Update SSL certs
+#######################################################
+apt update
+apt install -y --no-install-recommends \
+    gpg libssl-dev ca-certificates \
+ && update-ca-certificates
+
+#######################################################
+# Install system utilities
+#######################################################
+apt install -y --no-install-recommends \
+    apt-utils apt-transport-https
+
+apt update
+apt install -y --no-install-recommends \
+    sudo nano locales
+
+# https://wiki.debian.org/Locale#Manually
+sed -i "s/# en_US.UTF-8/en_US.UTF-8/" /etc/locale.gen
+locale-gen
+
+#######################################################
+# Install sccache
+#######################################################
+tar -C /usr/bin -f /usr/local/src/sccache.tar.gz \
+    --wildcards --strip-components=1 -x */sccache \
+ && chmod +x /usr/bin/sccache
+
+#######################################################
+# Install miniconda, mamba, CUDA Toolkit, and compilers
+#######################################################
+
+export CONDA_OVERRIDE_CUDA="$(echo "$CUDA_VERSION" | head -n4 | tail -n1 | cut -d' ' -f5 | cut -d',' -f1)"
+
+# Install miniconda
+chmod +x /usr/local/src/miniconda.sh
+/usr/local/src/miniconda.sh -f -b -p /opt/conda
+export PATH="$PATH:/opt/conda/bin"
+# Don't prompt for installing packages
+conda config --system --set always_yes yes
+# Don't modify the shell
+# conda config --system --set changeps1 False
+# Remove the defaults channel
+conda config --system --remove channels defaults
+# Install mamba
+conda install -n base -c conda-forge mamba
+# Install CUDA Toolkit and conda compilers
+mamba install -n base -c conda-forge cudatoolkit compilers

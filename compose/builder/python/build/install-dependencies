@@ -1,0 +1,40 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+# https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
+rm -f /etc/apt/apt.conf.d/docker-clean;
+echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+#######################################################
+# Update SSL certs
+#######################################################
+apt update
+apt install -y --no-install-recommends \
+    gpg gnupg libssl-dev ca-certificates \
+ && update-ca-certificates
+
+#######################################################
+# Install dependencies
+#######################################################
+apt update
+apt install -y --no-install-recommends  \
+    python3-pip                         \
+    build-essential                     \
+    python${PYTHON_VERSION}             \
+    python${PYTHON_VERSION}-dev         \
+    python${PYTHON_VERSION}-distutils   \
+
+# Remove any existing pip alternatives
+(update-alternatives --remove-all pip >/dev/null 2>&1 || true)
+
+ # Set pip3 as the default pip
+update-alternatives --install /usr/bin/pip pip $(realpath $(which pip3)) 1
+update-alternatives --set pip $(realpath $(which pip3))
+
+# Remove any existing python alternatives
+(update-alternatives --remove-all python >/dev/null 2>&1 || true)
+
+ # Set python${PYTHON_VERSION} as the default python
+update-alternatives --install /usr/bin/python python $(realpath $(which python${PYTHON_VERSION})) 1
+update-alternatives --set python $(realpath $(which python${PYTHON_VERSION}))
