@@ -157,7 +157,14 @@ $(for x in $(list-repos); do echo "\
                 "type": "shell",
                 "group": "build",
                 "command": "configure-all-cpp",
-                "options": { "cwd": "\${env:HOME}" },
+                "options": {
+                    "cwd": "\${env:HOME}",
+                    "env": {
+                        "BUILD_TYPE": "\${input:BUILD_TYPE}",
+                        "BUILD_TESTS": "\${input:BUILD_TESTS}",
+                        "BUILD_BENCH": "\${input:BUILD_BENCH}",
+                    },
+                },
                 "problemMatcher": [
                     { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
                     { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
@@ -179,7 +186,14 @@ $(for x in $(list-repos); do echo "\
                 "type": "shell",
                 "group": "build",
                 "command": "build-all-cpp",
-                "options": { "cwd": "\${env:HOME}" },
+                "options": {
+                    "cwd": "\${env:HOME}"
+                    "env": {
+                        "BUILD_TYPE": "\${input:BUILD_TYPE}",
+                        "BUILD_TESTS": "\${input:BUILD_TESTS}",
+                        "BUILD_BENCH": "\${input:BUILD_BENCH}",
+                    },
+                },
                 "problemMatcher": [
                     { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
                     { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
