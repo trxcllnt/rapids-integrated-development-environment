@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-
-set -Eeox pipefail
-
-cmake --build /opt/rapids/cudf/cpp/build -v -- -j${PARALLEL_LEVEL:-1} all

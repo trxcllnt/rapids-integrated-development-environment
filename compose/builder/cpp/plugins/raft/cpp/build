@@ -1,0 +1,7 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+cd $(dirname "$(realpath "$0")")
+
+./configure && ./compile

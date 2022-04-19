@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+rm -rf ${CUSPATIAL_CPP_BINARY_DIR:-/opt/rapids/cuspatial/cpp/build};

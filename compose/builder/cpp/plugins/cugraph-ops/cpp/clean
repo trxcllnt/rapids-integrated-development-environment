@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+rm -rf ${CUGRAPH_OPS_CPP_BINARY_DIR:-/opt/rapids/cugraph-ops/build};

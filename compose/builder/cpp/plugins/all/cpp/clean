@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+pids=
+
+for repo in $(list-repos); do
+    if [ -n $(which clean-$repo-cpp) ]; then
+        echo "+ clean-$repo-cpp";
+        script -aqc "clean-$repo-cpp" /dev/null 1>/dev/null &
+        pids="${pids:+$pids }$!"
+    fi
+done
+
+if [[ -n "$pids" ]]; then
+    wait ${pids};
+fi

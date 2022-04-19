@@ -8,12 +8,17 @@ x-run-with-gpu: &run_with_gpu
           - capabilities:
             - gpu
 
+x-common-environment: &env_common
+  # Colorize the terminal in the container if possible
+  TERM: "${TERM:-}"
+  NVIDIA_DRIVER_CAPABILITIES: all
+
 services:
 
   cpp-builder:
     image: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     build:
-      context: compose/cpp-builder
+      context: compose/builder/cpp
       args:
         GCC_VERSION: ${GCC_VERSION:-9}
         UXC_VERSION: ${UXC_VERSION:-1.11}
@@ -23,6 +28,10 @@ services:
       # Colorize the terminal in the container if possible
       TERM: "${TERM:-}"
       NVIDIA_DRIVER_CAPABILITIES: all
+      <<: *env_common
+    volumes:
+      - "./compose/builder/cpp/plugins:/opt/rapids/.plugins:ro"
+    <<: *run_with_gpu
     volumes:
       - "./compose/cpp-builder/plugins:/opt/rapids/.plugins:ro"
     <<: *run_with_gpu
@@ -33,11 +42,8 @@ services:
       context: compose/code-server
       args:
         BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
-    # env_file: .env
     environment:
-      # Colorize the terminal in the container if possible
-      TERM: "${TERM:-}"
-      NVIDIA_DRIVER_CAPABILITIES: all
+      <<: *env_common
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"

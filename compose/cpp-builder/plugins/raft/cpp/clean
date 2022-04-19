@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-
-set -Eeo pipefail
-
-rm -rf ${RAFT_CPP_BINARY_DIR:-/opt/rapids/raft/cpp/build};

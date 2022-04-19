@@ -1,0 +1,10 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+(
+    set -x;
+    cmake --build /opt/rapids/raft/cpp/build -v -- -j${PARALLEL_LEVEL:-1} all;
+    { set +x; } 2>/dev/null;
+    echo "libraft compile time:";
+)

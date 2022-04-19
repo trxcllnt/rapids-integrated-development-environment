@@ -1,0 +1,54 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
+CUDA_KERNELINFO=${CUDA_KERNELINFO:-OFF}
+DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
+
+CMAKE_BUILD_TYPE=${BUILD_TYPE:-Release}
+CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES:-NATIVE}
+CFLAGS="${CFLAGS:+$CFLAGS }-fdiagnostics-color=always"
+CXXFLAGS="${CXXFLAGS:+$CXXFLAGS }-fdiagnostics-color=always"
+CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
+
+BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-ON}
+
+if [[ $BUILD_SHARED_LIBS != OFF ]]; then
+    BUILD_SHARED_LIBS=ON
+fi
+
+time (
+    set -x;
+    CFLAGS=${CFLAGS} \
+    CXXFLAGS=${CXXFLAGS} \
+    CUDAFLAGS=${CUDAFLAGS} \
+    cmake -GNinja \
+          -S /opt/rapids/cumlprims_mg/cpp \
+          -B /opt/rapids/cumlprims_mg/cpp/build \
+          \
+          -D raft_ROOT=/opt/rapids/raft/cpp/build \
+          \
+          `# cumlprims_mg tests currently fail to compile` \
+          -D BUILD_TESTS=OFF \
+          \
+          -D DETECT_CONDA_ENV=OFF \
+          -D DISABLE_FORCE_CLONE_RAFT=ON \
+          \
+          -D BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
+          \
+          -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
+          -D CUDA_ENABLE_KERNELINFO=${CUDA_KERNELINFO} \
+          \
+          -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+          -D CMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES} \
+          -D CMAKE_C_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          -D CMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          -D CMAKE_CUDA_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          \
+          ${@};
+    { set +x; } 2>/dev/null;
+    echo "libcumlprims_mg configure time:";
+)

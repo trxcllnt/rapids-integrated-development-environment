@@ -1,0 +1,90 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+BUILD_BENCH=${BUILD_BENCH:-OFF}
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+BUILD_EXAMPLES=${BUILD_EXAMPLES:-OFF}
+CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
+CUDA_KERNELINFO=${CUDA_KERNELINFO:-OFF}
+DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
+
+CUMLPRIMS_MG_OPTIONS=
+ENABLE_CUMLPRIMS_MG=OFF
+BUILD_CUML_MG_TESTS=OFF
+BUILD_CUML_MG_BENCH=OFF
+CUML_USE_FAISS_STATIC=OFF
+CUML_USE_TREELITE_STATIC=OFF
+BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-ON}
+
+if [[ $BUILD_SHARED_LIBS == OFF ]]; then
+    CUML_USE_FAISS_STATIC=ON
+    CUML_USE_TREELITE_STATIC=ON
+else
+    BUILD_SHARED_LIBS=ON;
+fi
+
+if [[ -d /opt/rapids/cumlprims_mg/cpp/build ]]; then
+    ENABLE_CUMLPRIMS_MG=ON
+    BUILD_CUML_MG_TESTS=${BUILD_TESTS}
+    BUILD_CUML_MG_BENCH=${BUILD_BENCH}
+    CUMLPRIMS_MG_OPTIONS="\
+    -D cumlprims_mg_ROOT=/opt/rapids/cumlprims_mg/cpp/build"
+fi
+
+CUMLPRIMS_MG_OPTIONS="\
+    ${CUMLPRIMS_MG_OPTIONS:+$CUMLPRIMS_MG_OPTIONS } \
+    -D ENABLE_CUMLPRIMS_MG=${ENABLE_CUMLPRIMS_MG} \
+    -D BUILD_CUML_MG_TESTS=${BUILD_CUML_MG_TESTS} \
+    -D BUILD_CUML_PRIMS_BENCH=${BUILD_CUML_MG_BENCH}"
+
+CMAKE_BUILD_TYPE=${BUILD_TYPE:-Release}
+CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES:-NATIVE}
+CFLAGS="${CFLAGS:+$CFLAGS }-fdiagnostics-color=always"
+CXXFLAGS="${CXXFLAGS:+$CXXFLAGS }-fdiagnostics-color=always"
+CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
+
+time (
+    set -x;
+    CFLAGS=${CFLAGS} \
+    CXXFLAGS=${CXXFLAGS} \
+    CUDAFLAGS=${CUDAFLAGS} \
+    cmake -GNinja \
+          -S /opt/rapids/cuml/cpp \
+          -B /opt/rapids/cuml/cpp/build \
+          \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
+          -D raft_ROOT=/opt/rapids/raft/cpp/build \
+          \
+          ${CUMLPRIMS_MG_OPTIONS} \
+          \
+          -D DETECT_CONDA_ENV=OFF \
+          -D BUILD_CUML_BENCH=${BUILD_BENCH} \
+          -D BUILD_CUML_TESTS=${BUILD_TESTS} \
+          -D BUILD_PRIMS_TESTS=${BUILD_TESTS} \
+          -D BUILD_CUML_EXAMPLES=${BUILD_EXAMPLES} \
+          \
+          -D BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
+          -D CUML_USE_FAISS_STATIC=${CUML_USE_FAISS_STATIC} \
+          -D CUML_USE_TREELITE_STATIC=${CUML_USE_TREELITE_STATIC} \
+          \
+          -D CUDA_ENABLE_LINE_INFO=${CUDA_LINEINFO} \
+          -D CUDA_ENABLE_KERNEL_INFO=${CUDA_KERNELINFO} \
+          \
+          -D BUILD_CUML_STD_COMMS=${BUILD_CUML_STD_COMMS:-ON} \
+          -D BUILD_CUML_MPI_COMMS=${BUILD_CUML_MPI_COMMS:-OFF} \
+          -D BUILD_CUML_C_LIBRARY=${BUILD_CUML_C_LIBRARY:-OFF} \
+          -D BUILD_CUML_CPP_LIBRARY=${BUILD_CUML_CPP_LIBRARY:-ON} \
+          -D DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS} \
+          \
+          -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+          -D CMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES} \
+          -D CMAKE_C_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          -D CMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          -D CMAKE_CUDA_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          \
+          ${@};
+    { set +x; } 2>/dev/null;
+    echo "libcuml configure time:";
+)
