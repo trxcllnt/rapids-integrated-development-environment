@@ -53,6 +53,20 @@ fi
         sed -ir "s@$INTERNAL_CPP_BINARY_DIR@$EXTERNAL_CPP_BINARY_DIR@g" "$CC_JSON" 2>/dev/null;
         # Replace $INTERNAL_CPP_SOURCE_DIR with $EXTERNAL_CPP_SOURCE_DIR in compile_commands.json
         sed -ir "s@$INTERNAL_CPP_SOURCE_DIR@$EXTERNAL_CPP_SOURCE_DIR@g" "$CC_JSON" 2>/dev/null;
+
+        for repo in $(list-repos); do
+            name="$(echo $repo | tr '[:lower:]' '[:upper:]')";
+            name="${name//\-/_}";
+            ext_cpp_bin="$(eval echo \$${name}_CPP_BINARY_DIR)";
+            ext_cpp_src="$(eval echo \$${name}_CPP_SOURCE_DIR)";
+            int_cpp_bin="$(cpp-binary-dir-util --project=$repo)";
+            int_cpp_src="$(cpp-source-dir-util --project=$repo)";
+            # Replace $int_cpp_bin with $ext_cpp_bin in compile_commands.json
+            sed -ir "s@$int_cpp_bin@$ext_cpp_bin@g" "$CC_JSON" 2>/dev/null;
+            # Replace $int_cpp_src with $ext_cpp_src in compile_commands.json
+            sed -ir "s@$int_cpp_src@$ext_cpp_src@g" "$CC_JSON" 2>/dev/null;
+        done
+
         # Replace /opt/rapids with $HOME in compile_commands.json
         (
             SUF="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
