@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 add-apt-repository --remove -y ppa:git-core/ppa
 add-apt-repository --remove -y ppa:ubuntu-toolchain-r/test

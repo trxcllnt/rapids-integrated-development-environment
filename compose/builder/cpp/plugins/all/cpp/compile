@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 for repo in $(list-repos); do
     if [ -n $(which compile-$repo-cpp) ]; then

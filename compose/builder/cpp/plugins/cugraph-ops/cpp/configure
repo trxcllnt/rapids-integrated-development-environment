@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 BUILD_TESTS=${BUILD_TESTS:-OFF}
 CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}

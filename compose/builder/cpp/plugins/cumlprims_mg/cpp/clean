@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 rm -rf ${CUMLPRIMS_MG_CPP_BINARY_DIR:-/opt/rapids/cumlprims_mg/cpp/build};

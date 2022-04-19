@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 cd $(dirname "$(realpath "$0")")/..;
 
@@ -110,7 +110,7 @@ make_cpp_script() {
         mkdir -p "$PLUGINS_DIR/$repo/cpp";
         cat << EOF > "$PLUGINS_DIR/$repo/cpp/$name"
 #! /usr/bin/env bash
-set -Eeou pipefail;
+set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 if [[ -d "\$HOME/$repo" ]]; then
 
@@ -170,7 +170,7 @@ make_clone_script() {
         mkdir -p "$PLUGINS_DIR/$repo";
         cat << EOF > "$PLUGINS_DIR/$repo/clone"
 #! /usr/bin/env bash
-set -Eeou pipefail;
+set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 
 GHHOSTS="\$HOME/.config/gh/hosts.yml";
@@ -216,7 +216,7 @@ make_build_cpp_script() {
     (
         cat << EOF > "$PLUGINS_DIR/$1/cpp/build"
 #! /usr/bin/env bash
-set -Eeou pipefail;
+set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 
 configure-$1-cpp && compile-$1-cpp;

@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 echo rmm raft cudf cumlprims_mg cuml cugraph-ops cugraph cuspatial

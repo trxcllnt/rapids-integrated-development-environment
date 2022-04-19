@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 for x in $(which -a gcc); do
     if [[ "$x" != "$(realpath "$0")" ]]; then

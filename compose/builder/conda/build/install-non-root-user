@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeou pipefail
+set -Eeo pipefail
 
 #######################################################
 # Add non-root `coder` user with passwordless sudo

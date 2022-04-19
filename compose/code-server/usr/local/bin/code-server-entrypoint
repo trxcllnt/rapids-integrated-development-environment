@@ -8,17 +8,20 @@ eval "$(fixuid -q)"
 
 if [[ -n "${DOCKER_USER_HOME:-}" ]]; then
     if [[ "$DOCKER_USER_HOME" != "$HOME" ]]; then
-        mkdir -p "$DOCKER_USER_HOME"
-        sudo usermod -d "$DOCKER_USER_HOME" "$USER"
-        sudo sed -i "s@/opt/rapids@$DOCKER_USER_HOME@g" /etc/fixuid/config.yml
-        touch "$HOME"/.{bashrc,eternal_bash_history}
-        if [[ ! -f "$DOCKER_USER_HOME"/.bashrc ]]; then
-            cp "$HOME"/.bashrc "$DOCKER_USER_HOME"/.bashrc
-        fi
-        if [[ ! -f "$DOCKER_USER_HOME"/.eternal_bash_history ]]; then
-            cp "$HOME"/.eternal_bash_history "$DOCKER_USER_HOME"/.eternal_bash_history
-        fi
+        ORIG_HOME="$HOME"
         HOME="$DOCKER_USER_HOME"
+        mkdir -p "$HOME"
+        sudo usermod -d "$HOME" "$USER"
+        sudo sed -i "s@/$ORIG_HOME@$HOME@g" /etc/fixuid/config.yml
+        touch "$ORIG_HOME"/.{bashrc,eternal_bash_history}
+        sudo chown "$USER:$USER" "$HOME"
+        eval "$(fixuid -q)"
+        if [[ ! -f "$HOME"/.bashrc ]]; then
+            cp "$ORIG_HOME"/.bashrc "$HOME"/.bashrc
+        fi
+        if [[ ! -f "$HOME"/.eternal_bash_history ]]; then
+            cp "$ORIG_HOME"/.eternal_bash_history "$HOME"/.eternal_bash_history
+        fi
     fi
 fi
 
