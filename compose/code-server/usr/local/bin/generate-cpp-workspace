@@ -187,7 +187,7 @@ $(for x in $(list-repos); do echo "\
                 "group": "build",
                 "command": "build-all-cpp",
                 "options": {
-                    "cwd": "\${env:HOME}"
+                    "cwd": "\${env:HOME}",
                     "env": {
                         "BUILD_TYPE": "\${input:BUILD_TYPE}",
                         "BUILD_TESTS": "\${input:BUILD_TESTS}",
