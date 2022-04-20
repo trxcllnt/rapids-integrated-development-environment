@@ -31,7 +31,7 @@ To build the images, use `docker-compose` with `buildkit`:
 DOCKER_BUILDKIT=1 docker-compose build --force-rm \
     cpp-builder \
     conda-builder \
-    python-builder \
+    wheel-builder \
     code-server
 ```
 

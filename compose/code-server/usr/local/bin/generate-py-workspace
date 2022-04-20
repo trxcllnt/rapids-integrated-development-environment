@@ -2,45 +2,155 @@
 
 set -Eeuo pipefail
 
-# rapids_vscode_python_workspace() {
-# cat << EOF
-# {
-#     "folders": [
-#         { "name": "rmm", "path": "rmm/python" },
-#         { "name": "raft", "path": "raft/python" },
-#         { "name": "cudf", "path": "cudf/python" },
-#         { "name": "cugraph-ops", "path": "cugraph-ops/python" },
-#         { "name": "cugraph", "path": "cugraph/python" },
-#         { "name": "cuml", "path": "cuml/python" },
-#         { "name": "cuspatial", "path": "cuspatial/python/cuspatial" }
-#     ],
-#     "settings": {
-#         "git.ignoreLimitWarning": true,
+rapids_vscode_python_workspace() {
 
-#         // Fixes to make the "<ctrl>+<shift>+<B>" tasks list launch instantly
-#         "task.autoDetect": "off",
+    gen_python_clean_task() {
+        echo "{
+                \"label\": \"Clean $1 Python\",
+                \"type\": \"shell\",
+                \"group\": \"build\",
+                \"command\": \"clean-$1-python\",
+                \"options\": {
+                    \"cwd\": \"\${input:${1}_python_source_dir}\",
+                    \"env\": {
+                        \"BUILD_IMAGE\": \"pauletaylor/rapids-ide:\${input:PKG_TYPE}-builder-cuda\${env:CUDA_VERSION}-ubuntu20.04\",
+                        \"PYTHON_BUILDER\": \"\${input:PKG_TYPE}\",
+                    },
+                },
+                \"problemMatcher\": []
+            }";
+    }
 
-#         "C_Cpp.vcpkg.enabled": false,
-#         "C_Cpp.default.cStandard": "gnu17",
-#         "C_Cpp.default.cppStandard": "c++17",
-#         "C_Cpp.default.compilerArgs": ["-std=c++17"],
-#         "C_Cpp.default.compilerPath": "",
-#         "C_Cpp.autoAddFileAssociations": false,
-#         "C_Cpp.default.compileCommands": "${workspaceFolder}/compile_commands.json",
+    gen_python_build_task() {
+        echo "{
+                \"label\": \"Build $1 Python\",
+                \"type\": \"shell\",
+                \"group\": \"build\",
+                \"command\": \"build-$1-python\",
+                \"options\": {
+                    \"cwd\": \"\${input:${1}_python_source_dir}\",
+                    \"env\": {
+                        \"BUILD_IMAGE\": \"pauletaylor/rapids-ide:\${input:PKG_TYPE}-builder-cuda\${env:CUDA_VERSION}-ubuntu20.04\",
+                        \"PYTHON_BUILDER\": \"\${input:PKG_TYPE}\",
+                    },
+                },
+                \"problemMatcher\": [
+                    { \"owner\": \"cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_python_source_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 4, \"message\": 5, \"regexp\": \"^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} }
+                ]
+            }";
+    }
 
-#         "files.associations": {
-#             "*.h": "c",
-#             "*.hpp": "cpp",
-#             "*.cu": "cuda-cpp",
-#             "*.cuh": "cuda-cpp",
-#             "/usr/include/c++/**/*": "cpp",
-#             "**/libcudacxx/include/**/*": "cpp",
-#         },
-#     }
-# }
-# EOF
-# }
+    gen_python_source_dir_input() {
+        echo "{
+                \"type\": \"command\",
+                \"id\": \"${1}_python_source_dir\",
+                \"command\": \"shellCommand.execute\",
+                \"args\": { \"useFirstResult\": true, \"command\": \"python-source-dir-util --project=$1\" }
+            }";
+    }
+
+    gen_python_binary_dir_input() {
+        echo "{
+                \"type\": \"command\",
+                \"id\": \"${1}_python_binary_dir\",
+                \"command\": \"shellCommand.execute\",
+                \"args\": { \"useFirstResult\": true, \"command\": \"python-binary-dir-util --project=$1\" }
+            }";
+    }
+
+cat << EOF
+{
+    "folders": [
+        { "name": ".envs", "path": ".envs" },
+$(for x in $(list-repos); do echo "\
+        { \"name\": \"$x\", \"path\": \"$(realpath -m --relative-to="$HOME" "$(python-source-dir-util --project=$x)")\" },"; done;)
+    ],
+    "settings": {
+        "git.ignoreLimitWarning": true,
+
+        // Fixes to make the "<ctrl>+<shift>+<B>" tasks list launch instantly
+        "task.autoDetect": "off",
+
+        // doxdocgen doxygen style
+        "doxdocgen.generic.returnTemplate": "@return ",
+
+        "C_Cpp.vcpkg.enabled": false,
+        "C_Cpp.default.cStandard": "gnu17",
+        "C_Cpp.default.cppStandard": "c++17",
+        "C_Cpp.default.compilerArgs": ["-std=c++17"],
+        "C_Cpp.default.compilerPath": "",
+        "C_Cpp.autoAddFileAssociations": false,
+        "C_Cpp.default.compileCommands": "\${workspaceFolder}/compile_commands.json",
+
+        "files.trimFinalNewlines": true,
+        "files.insertFinalNewline": true,
+        "files.associations": {
+            "*.h": "c",
+            "*.hpp": "cpp",
+            "*.cu": "cuda-cpp",
+            "*.cuh": "cuda-cpp",
+            "/usr/include/c++/**/*": "cpp",
+            "**/libcudacxx/include/**/*": "cpp",
+        },
+        "files.watcherExclude": {
+            "**/.git/objects/**": true,
+            "**/.git/subtree-cache/**": true,
+            "**/build": true,
+            "**/build/python": true,
+        },
+
+        "terminal.integrated.cwd": "\${env:HOME}",
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Clean all Python",
+                "type": "shell",
+                "group": "build",
+                "command": "clean-all-python",
+                "options": { "cwd": "\${env:HOME}" },
+                "problemMatcher": []
+            },
+            {
+                "label": "Build all Python",
+                "type": "shell",
+                "group": "build",
+                "command": "build-all-python",
+                "options": {
+                    "cwd": "\${env:HOME}",
+                    "env": {
+                        "BUILD_IMAGE": "pauletaylor/rapids-ide:\${input:PKG_TYPE}-builder-cuda\${env:CUDA_VERSION}-ubuntu20.04",
+                        "PYTHON_BUILDER": "\${input:PKG_TYPE}",
+                    },
+                },
+                "problemMatcher": [
+                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
+                ]
+            },
+$(for x in $(list-repos); do echo "\
+            $(gen_python_clean_task $x),
+            $(gen_python_build_task $x),"; done;)
+        ],
+        "inputs": [
+            {
+                "id": "PKG_TYPE",
+                "type": "pickString",
+                "default": "wheel",
+                "options": ["wheel", "conda"],
+                "description": "Python package format",
+            },
+$(for x in $(list-repos); do echo "\
+            $(gen_python_source_dir_input $x),
+            $(gen_python_binary_dir_input $x),"; done;)
+        ]
+    }
+}
+EOF
+}
 
 # if [ ! -f "$HOME/python.code-workspace" ]; then
 #     rapids_vscode_python_workspace > "$HOME/python.code-workspace";
 # fi
+
+rapids_vscode_python_workspace > "$HOME/python.code-workspace";

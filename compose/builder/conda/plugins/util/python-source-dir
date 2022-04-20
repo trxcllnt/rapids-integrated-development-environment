@@ -14,7 +14,7 @@ done
 PYTHON_DIR="/opt/rapids/$PROJECT"
 
 if [[ -d "$PYTHON_DIR/python" ]]; then
-    PYTHON_DIR="$PYTHON_DIR/python/$PROJECT"
+    PYTHON_DIR="$PYTHON_DIR/python"
 fi
 
 PYTHON_DIR="$PYTHON_DIR/$PROJECT"

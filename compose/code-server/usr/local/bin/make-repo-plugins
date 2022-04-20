@@ -34,11 +34,13 @@ dir_envvars() {
         source_dir="\$HOME/$x";
         cpp_binary_dir="\$(cpp-binary-dir-util --project=$x)";
         cpp_source_dir="\$(cpp-source-dir-util --project=$x)";
+        python_binary_dir="\$(python-binary-dir-util --project=$x)";
         python_source_dir="\$(python-source-dir-util --project=$x)";
         VARS="${VARS:+$VARS\n    }if [[ -d \"$source_dir\" ]]; then
         echo \"${name}_SOURCE_DIR=$source_dir\" >> \"\$tmp_env_file\";
         echo \"${name}_CPP_BINARY_DIR=$cpp_binary_dir\" >> \"\$tmp_env_file\";
         echo \"${name}_CPP_SOURCE_DIR=$cpp_source_dir\" >> \"\$tmp_env_file\";
+        echo \"${name}_PYTHON_BINARY_DIR=$python_binary_dir\" >> \"\$tmp_env_file\";
         echo \"${name}_PYTHON_SOURCE_DIR=$python_source_dir\" >> \"\$tmp_env_file\";
     fi\
 "
@@ -48,6 +50,12 @@ dir_envvars() {
 
 init_volumes() {
     VOLUMES="volumes=\"\";"
+    VOLUMES+="
+    volumes+=\"-v \$HOME/.cache:/opt/rapids/.cache \";"
+    VOLUMES+="
+    volumes+=\"-v \$HOME/.local/bin:/opt/rapids/.local/bin \";"
+    VOLUMES+="
+    volumes+=\"-v \$HOME/.local/lib:/opt/rapids/.local/lib \";"
     for x in ${@}; do
         volume=
         if [[ $x == $1 ]]; then
@@ -62,15 +70,22 @@ init_volumes() {
 }
 
 copy_inputs_cmd() {
-    name="$(get_env_var_name $1)";
-    echo "copy-inputs-util --project=\\\"$1\\\" --src=\\\"\\\$${name}_SOURCE_DIR\\\" --bin=\\\"\\\$${name}_CPP_BINARY_DIR\\\"";
+    NAME="$(get_env_var_name $1)";
+    LANG="$(echo $2 | tr '[:lower:]' '[:upper:]')"
+    cmd="copy-inputs-util --project=\\\"$1\\\"";
+    cmd+=" --src=\\\"\\\$${NAME}_SOURCE_DIR\\\"";
+    cmd+=" --cpp=\\\"\\\$${NAME}_CPP_BINARY_DIR\\\"";
+    if [[ $LANG != CPP ]]; then
+        cmd+=" --$2=\\\"\\\$${NAME}_${LANG}_BINARY_DIR\\\"";
+    fi;
+    echo $cmd
 }
 
 copy_input_cmds() {
     COPY_INPUT_CMDS="pids=\"\"; \\";
-    for x in ${@}; do
+    for x in ${@:2}; do
         COPY_INPUT_CMDS+="
-        bash -l <<< \"$(copy_inputs_cmd $x)\" & \\
+        bash -l <<< \"$(copy_inputs_cmd $x $1)\" & \\
         pids=\"\${pids:+\$pids }\$!\";";
     done
     echo "$COPY_INPUT_CMDS
@@ -80,44 +95,63 @@ copy_input_cmds() {
 rewrite_output_paths() {
     REWRITE_OUTPUT_CMDS="";
     for x in ${@}; do
-        name="$(get_env_var_name $x)";
+        NAME="$(get_env_var_name $x)";
         inner_src_dir="/opt/rapids/$x";
         outer_src_dir="\$HOME/$x";
-        outer_cpp_src_dir="\$${name}_CPP_SOURCE_DIR";
-        outer_cpp_bin_dir="\$${name}_CPP_BINARY_DIR";
-        outer_cpp_bin_dir_relative="\$(realpath -m --relative-to=\"\$${name}_CPP_SOURCE_DIR\" \"\$${name}_CPP_BINARY_DIR\")";
-        inner_cpp_src_dir="\$(realpath -m \"$inner_src_dir/\$(realpath -m --relative-to=\"\$${name}_SOURCE_DIR\" \"\$${name}_CPP_SOURCE_DIR\")\")";
+
         inner_cpp_bin_dir="$inner_src_dir/build";
+        outer_cpp_src_dir="\$${NAME}_CPP_SOURCE_DIR";
+        outer_cpp_bin_dir="\$${NAME}_CPP_BINARY_DIR";
+        outer_cpp_bin_dir_relative="\$(realpath -m --relative-to=\"$outer_cpp_src_dir\" \"$outer_cpp_bin_dir\")";
+        inner_cpp_src_dir="\$(realpath -m \"$inner_src_dir/\$(realpath -m --relative-to=\"$outer_src_dir\" \"$outer_cpp_src_dir\")\")";
+
+        inner_python_bin_dir="$inner_src_dir/build/python";
+        outer_python_src_dir="\$${NAME}_PYTHON_SOURCE_DIR";
+        outer_python_bin_dir="\$${NAME}_PYTHON_BINARY_DIR";
+        outer_python_bin_dir_relative="\$(realpath -m --relative-to=\"$outer_python_src_dir\" \"$outer_python_bin_dir\")";
+        inner_python_src_dir="\$(realpath -m \"$inner_src_dir/\$(realpath -m --relative-to=\"$outer_src_dir\" \"$outer_python_src_dir\")\")";
+
         REWRITE_OUTPUT_CMDS="${REWRITE_OUTPUT_CMDS:+$REWRITE_OUTPUT_CMDS \\
           | }sed -r \"s@$inner_cpp_bin_dir@$outer_cpp_bin_dir@g\" \\
           | sed -r \"s@$inner_cpp_src_dir@$outer_cpp_src_dir@g\" \\
-          | sed -r \"s@ build/@ $outer_cpp_bin_dir_relative/@g\""
+          | sed -r \"s@ build@ $outer_cpp_bin_dir_relative/@g\" \\
+          | sed -r \"s@$inner_python_bin_dir@$outer_python_bin_dir@g\" \\
+          | sed -r \"s@$inner_python_src_dir@$outer_python_src_dir@g\" \\
+          | sed -r \"s@ build/python@ $outer_python_bin_dir_relative/@g\""
     done
     echo "$REWRITE_OUTPUT_CMDS"
 }
 
 copy_output_cmd() {
-    name="$(get_env_var_name $1)";
-    echo "copy-output-util --project=\"$1\" --src=\"\$${name}_CPP_SOURCE_DIR\" --bin=\"\$${name}_CPP_BINARY_DIR\"";
+    NAME="$(get_env_var_name $2)";
+    LANG="$(echo $1 | tr '[:lower:]' '[:upper:]')"
+    cmd="copy-output-util --project=\"$2\"";
+    cmd+=" --src=\"\$${NAME}_CPP_SOURCE_DIR\"";
+    cmd+=" --cpp=\"\$${NAME}_CPP_BINARY_DIR\"";
+    if [[ $LANG != CPP ]]; then
+        cmd+=" --$1=\"\$${NAME}_${LANG}_BINARY_DIR\"";
+    fi
+    echo $cmd;
 }
 
-make_cpp_script() {
+make_script() {
     (
-        name="$1";
-        repo="$2";
-        cmds="$3";
-        deps="${@:4}";
-        mkdir -p "$PLUGINS_DIR/$repo/cpp";
-        cat << EOF > "$PLUGINS_DIR/$repo/cpp/$name"
+        lang="$1";
+        name="$2";
+        repo="$3";
+        cmds="$4";
+        deps="${@:5}";
+        mkdir -p "$PLUGINS_DIR/$repo/$lang";
+        cat << EOF > "$PLUGINS_DIR/$repo/$lang/$name"
 #! /usr/bin/env bash
 set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 if [[ -d "\$HOME/$repo" ]]; then
 
     tmp_env_file="\$(mktemp)";
-    touch "\$HOME/.envs/cpp.env" "\$tmp_env_file";
+    touch "\$HOME/.envs/$lang.env" "\$tmp_env_file";
 
-    cat "\$HOME/.envs/cpp.env" >> "\$tmp_env_file";
+    cat "\$HOME/.envs/$lang.env" >> "\$tmp_env_file";
 
     if [ -n \${BUILD_TYPE:-} ]; then
         echo "BUILD_TYPE=\$BUILD_TYPE" >> "\$tmp_env_file";
@@ -150,7 +184,7 @@ if [[ -d "\$HOME/$repo" ]]; then
     docker run \\
         --rm -it --runtime nvidia \\
         --env-file "\$tmp_env_file" \\
-        --name "$name-$repo-cpp-\$(basename "\$tmp_env_file")" \\
+        --name "$name-$repo-$lang-\$(basename "\$tmp_env_file")" \\
         \${volumes} \\
         \${BUILD_IMAGE:-${DEFAULT_BUILD_IMAGE}} \\
         bash -c '$cmds' _ "\${@}";
@@ -158,7 +192,7 @@ if [[ -d "\$HOME/$repo" ]]; then
 fi
 EOF
 
-        chmod +x "$PLUGINS_DIR/$repo/cpp/$name"
+        chmod +x "$PLUGINS_DIR/$repo/$lang/$name"
     )
 }
 
@@ -207,7 +241,7 @@ EOF
 
 make_clean_cpp_script() {
     # echo "generating \`clean-$1-cpp\` script";
-    make_cpp_script clean $1 "
+    make_script cpp clean $1 "
         clean-$1-cpp;";
 }
 
@@ -227,21 +261,37 @@ EOF
 
 make_compile_cpp_script() {
     # echo "generating \`compile-$1-cpp\` script";
-    make_cpp_script compile $1 "
-        $(copy_input_cmds ${@:2} $1); \\
+    make_script cpp compile $1 "
+        $(copy_input_cmds cpp ${@:2} $1); \\
         compile-$1-cpp \"\${@}\" 2>&1 \\
           | $(rewrite_output_paths ${@:2} $1); \\
-        $(copy_output_cmd $1);" \
+        $(copy_output_cmd cpp $1);" \
         "${@:2}";
 }
 
 make_configure_cpp_script() {
     # echo "generating \`configure-$1-cpp\` script";
-    make_cpp_script configure $1 "
-        $(copy_input_cmds ${@:2} $1); \\
+    make_script cpp configure $1 "
+        $(copy_input_cmds cpp ${@:2} $1); \\
         configure-$1-cpp \"\${@}\" 2>&1 \\
           | $(rewrite_output_paths ${@:2} $1); \\
-        $(copy_output_cmd $1);" \
+        $(copy_output_cmd cpp $1);" \
+        "${@:2}";
+}
+
+make_clean_python_script() {
+    # echo "generating \`clean-$1-python\` script";
+    make_script python clean $1 "
+        clean-$1-python;";
+}
+
+make_build_python_script() {
+    # echo "generating \`build-$1-python\` script";
+    make_script python build $1 "
+        $(copy_input_cmds python ${@:2} $1); \\
+        build-$1-python \"\${@}\" 2>&1 \\
+          | $(rewrite_output_paths ${@:2} $1); \\
+        $(copy_output_cmd python $1);" \
         "${@:2}";
 }
 
@@ -256,12 +306,14 @@ export -f copy_inputs_cmd;
 export -f copy_input_cmds;
 export -f rewrite_output_paths;
 export -f copy_output_cmd;
-export -f make_cpp_script;
+export -f make_script;
 export -f make_clone_script;
 export -f make_clean_cpp_script;
 export -f make_build_cpp_script;
 export -f make_compile_cpp_script;
 export -f make_configure_cpp_script;
+export -f make_build_python_script;
+export -f make_clean_python_script;
 
 pids=
 
@@ -283,6 +335,12 @@ for repo in $(list-repos); do
     bash -l <<< "make_configure_cpp_script $repo $deps" &
     pids="${pids:+$pids }$!"
 
+    bash -l <<< "make_build_python_script $repo $deps" &
+    pids="${pids:+$pids }$!"
+
+    bash -l <<< "make_clean_python_script $repo $deps" &
+    pids="${pids:+$pids }$!"
+
 done
 
 wait ${pids};
@@ -296,11 +354,13 @@ export -n copy_inputs_cmd;
 export -n copy_input_cmds;
 export -n rewrite_output_paths;
 export -n copy_output_cmd;
-export -n make_cpp_script;
+export -n make_script;
 export -n make_clone_script;
 export -n make_clean_cpp_script;
 export -n make_build_cpp_script;
 export -n make_compile_cpp_script;
 export -n make_configure_cpp_script;
+export -n make_build_python_script;
+export -n make_clean_python_script;
 
 cpp-builder-entrypoint;

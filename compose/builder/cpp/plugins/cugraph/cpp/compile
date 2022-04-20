@@ -5,5 +5,5 @@ set -Eeo pipefail
 time (
     cmake --build /opt/rapids/cugraph/cpp/build -v -- -j${PARALLEL_LEVEL:-1} all;
     { set +x; } 2>/dev/null;
-    echo "libcugraph compile time:";
+    echo -n "libcugraph compile time:";
 )

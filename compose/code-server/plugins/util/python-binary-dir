@@ -11,6 +11,6 @@ while [[ "$#" -gt 0 ]]; do
     esac; shift;
 done
 
-prefix="$(cpp-source-dir-util --project=$PROJECT)/build/cuda-$CUDA_VERSION";
+prefix="$(python-source-dir-util --project=$PROJECT)/build/cuda-$CUDA_VERSION";
 branch_name="$(git -C "$HOME/$PROJECT" branch --show-current)";
-echo "$prefix/${branch_name//\//__}/wheel";
+echo "$prefix/${branch_name//\//__}/${PYTHON_BUILDER:-wheel}";

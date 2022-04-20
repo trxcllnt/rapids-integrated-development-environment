@@ -48,5 +48,5 @@ time (
           \
           ${@};
     { set +x; } 2>/dev/null;
-    echo "libcuspatial configure time:";
+    echo -n "libcuspatial configure time:";
 )

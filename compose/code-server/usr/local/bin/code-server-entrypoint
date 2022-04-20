@@ -87,7 +87,7 @@ ln -sf "$HOME/.local/share/code-server/CachedExtensionVSIXs" "$HOME/.vscode-serv
 
 make-repo-plugins;
 clone-all;
-# generate-py-workspace;
+generate-py-workspace;
 generate-cpp-workspace;
 # generate-all-workspace;
 

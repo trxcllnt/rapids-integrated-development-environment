@@ -53,5 +53,5 @@ time (
           \
           ${@};
     { set +x; } 2>/dev/null;
-    echo "libcudf configure time:";
+    echo -n "libcudf configure time:";
 )

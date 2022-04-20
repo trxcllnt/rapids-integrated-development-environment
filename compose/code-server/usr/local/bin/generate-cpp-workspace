@@ -13,10 +13,7 @@ rapids_vscode_cpp_workspace() {
                 \"options\": {
                     \"cwd\": \"\${input:${1}_cpp_source_dir}\",
                 },
-                \"problemMatcher\": [
-                    { \"owner\": \"cuda-cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 3, \"message\": 4, \"regexp\": \"^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} },
-                    { \"owner\": \"cpp\", \"fileLocation\": [\"relative\", \"\${input:${1}_cpp_binary_dir}\"], \"pattern\": {\"file\": 1, \"line\": 2, \"severity\": 4, \"message\": 5, \"regexp\": \"^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$\"} }
-                ]
+                \"problemMatcher\": []
             }";
     }
 
@@ -130,10 +127,8 @@ $(for x in $(list-repos); do echo "\
         "files.watcherExclude": {
             "**/.git/objects/**": true,
             "**/.git/subtree-cache/**": true,
-            "**/build/cuda-*": true,
-            "**/build/debug": true,
-            "**/build/release": true,
-            "**/build/relwithdebinfo": true,
+            "**/build": true,
+            "**/build/python": true,
         },
 
         "terminal.integrated.cwd": "\${env:HOME}",
@@ -147,10 +142,7 @@ $(for x in $(list-repos); do echo "\
                 "group": "build",
                 "command": "clean-all-cpp",
                 "options": { "cwd": "\${env:HOME}" },
-                "problemMatcher": [
-                    { "owner": "cuda", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 3, "message": 4, "regexp": "^(.*)\\\((\\\d+)\\\):\\\s+(error|warning|note|info):\\\s+(.*)\$"} },
-                    { "owner": "cpp", "fileLocation": ["relative", "\${env:HOME}"], "pattern": {"file": 1, "line": 2, "severity": 4, "message": 5, "regexp": "^(.*):(\\\d+):(\\\d+):\\\s+(error|warning|note|info):\\\s+(.*)\$"} }
-                ]
+                "problemMatcher": []
             },
             {
                 "label": "Configure all C++",
@@ -236,6 +228,8 @@ $(for x in $(list-repos); do echo "\
 EOF
 }
 
-if [ ! -f "$HOME/cpp.code-workspace" ]; then
-    rapids_vscode_cpp_workspace > "$HOME/cpp.code-workspace";
-fi
+# if [ ! -f "$HOME/cpp.code-workspace" ]; then
+#     rapids_vscode_cpp_workspace > "$HOME/cpp.code-workspace";
+# fi
+
+rapids_vscode_cpp_workspace > "$HOME/cpp.code-workspace";

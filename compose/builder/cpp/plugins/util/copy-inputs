@@ -7,17 +7,19 @@ cd $(dirname "$(realpath "$0")")
 PROJECT=
 EXTERNAL_SOURCE_DIR=
 EXTERNAL_CPP_BINARY_DIR=
+EXTERNAL_PYTHON_BINARY_DIR=
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --project=*) PROJECT="${1#--project=}";;
         --src=*) EXTERNAL_SOURCE_DIR="${1#--src=}";;
-        --bin=*) EXTERNAL_CPP_BINARY_DIR="${1#--bin=}";;
+        --cpp=*) EXTERNAL_CPP_BINARY_DIR="${1#--cpp=}";;
+        --python=*) EXTERNAL_PYTHON_BINARY_DIR="${1#--python=}";;
         *) ;;
     esac; shift;
 done
 
-if [[ ! -n "$EXTERNAL_SOURCE_DIR" || ! -d "$EXTERNAL_SOURCE_DIR" ]]; then
+if [[ -z "$EXTERNAL_SOURCE_DIR" || ! -d "$EXTERNAL_SOURCE_DIR" ]]; then
     exit 1;
 fi
 
@@ -31,23 +33,14 @@ INTERNAL_SOURCE_DIR="/opt/rapids/$PROJECT";
 
 INTERNAL_CPP_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")";
 INTERNAL_CPP_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")";
+INTERNAL_PYTHON_BINARY_DIR="$(python-binary-dir-util --project="$PROJECT")";
 
-if [[ ! -n "$INTERNAL_CPP_SOURCE_DIR" ]]; then
-    exit 1;
-fi
+mkdir -p "$INTERNAL_CPP_SOURCE_DIR" "$INTERNAL_CPP_BINARY_DIR" "$INTERNAL_PYTHON_BINARY_DIR";
 
-J=$(nproc --ignore=2)
-
-if [[ -z "$INTERNAL_CPP_BINARY_DIR" ]]; then
-    INTERNAL_CPP_BINARY_DIR="$INTERNAL_CPP_SOURCE_DIR/build";
-fi
-
-mkdir -p "$INTERNAL_CPP_SOURCE_DIR";
-mkdir -p "$INTERNAL_CPP_BINARY_DIR";
-
-# Move the build dir from its external location to its inner location
+# Move the cpp build dir from its external location to its inner location
+if [[ -n "$EXTERNAL_CPP_BINARY_DIR" ]]; then
 (
-    SUF="$(realpath -m --relative-to="$EXTERNAL_SOURCE_DIR" "$EXTERNAL_CPP_BINARY_DIR")"
+    SUF="$(realpath -m --relative-to="$EXTERNAL_SOURCE_DIR" "$EXTERNAL_CPP_BINARY_DIR")";
     mkdir -p "$INTERNAL_SOURCE_DIR/$SUF";
     if [[ -d "$INTERNAL_SOURCE_DIR/$SUF" ]]; then
         tmp_dir="$(mktemp -d)";
@@ -57,3 +50,19 @@ mkdir -p "$INTERNAL_CPP_BINARY_DIR";
         rm -rf "$tmp_dir";
     fi
 ) || true;
+fi;
+
+# Move the python build dir from its external location to its inner location
+if [[ -n "$EXTERNAL_PYTHON_BINARY_DIR" ]]; then
+(
+    SUF="$(realpath -m --relative-to="$EXTERNAL_SOURCE_DIR" "$EXTERNAL_PYTHON_BINARY_DIR")";
+    mkdir -p "$INTERNAL_SOURCE_DIR/$SUF";
+    if [[ -d "$INTERNAL_SOURCE_DIR/$SUF" ]]; then
+        tmp_dir="$(mktemp -d)";
+        mv "$INTERNAL_SOURCE_DIR/$SUF" "$tmp_dir/build";
+        rm -rf "$INTERNAL_PYTHON_BINARY_DIR";
+        mv "$tmp_dir/build" "$INTERNAL_PYTHON_BINARY_DIR";
+        rm -rf "$tmp_dir";
+    fi
+) || true;
+fi

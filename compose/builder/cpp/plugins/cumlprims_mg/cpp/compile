@@ -6,5 +6,5 @@ set -Eeo pipefail
     set -x;
     cmake --build /opt/rapids/cumlprims_mg/cpp/build -v -- -j${PARALLEL_LEVEL:-1} all;
     { set +x; } 2>/dev/null;
-    echo "libcumlprims_mg compile time:";
+    echo -n "libcumlprims_mg compile time:";
 )

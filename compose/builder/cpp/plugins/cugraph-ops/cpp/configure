@@ -47,5 +47,5 @@ time (
           \
           ${@};
     { set +x; } 2>/dev/null;
-    echo "libcugraphops configure time:";
+    echo -n "libcugraphops configure time:";
 )

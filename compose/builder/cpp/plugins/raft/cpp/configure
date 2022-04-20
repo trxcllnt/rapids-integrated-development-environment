@@ -55,5 +55,5 @@ time (
           \
           ${@};
     { set +x; } 2>/dev/null;
-    echo "libraft configure time:";
+    echo -n "libraft configure time:";
 )

@@ -6,5 +6,5 @@ set -Eeo pipefail
     set -x;
     cmake --build /opt/rapids/rmm/build -v -- -j${PARALLEL_LEVEL:-1} all;
     { set +x; } 2>/dev/null;
-    echo "librmm compile time:";
+    echo -n "librmm compile time:";
 )

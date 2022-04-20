@@ -1,9 +1,0 @@
-#! /usr/bin/env bash
-
-set -Eeo pipefail
-
-cd $(dirname "$(realpath "$0")")
-
-(
-    set -x;
-)

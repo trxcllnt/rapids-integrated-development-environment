@@ -50,5 +50,5 @@ time (
           \
           ${@};
     { set +x; } 2>/dev/null;
-    echo "libcumlprims_mg configure time:";
+    echo -n "libcumlprims_mg configure time:";
 )

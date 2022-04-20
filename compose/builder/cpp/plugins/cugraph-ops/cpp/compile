@@ -6,5 +6,5 @@ time (
     set -x;
     cmake --build /opt/rapids/cugraph-ops/build -v -- -j${PARALLEL_LEVEL:-1} all;
     { set +x; } 2>/dev/null;
-    echo "libcugraphops compile time:";
+    echo -n "libcugraphops compile time:";
 )

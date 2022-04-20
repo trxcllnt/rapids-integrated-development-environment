@@ -1,17 +1,17 @@
 # syntax=docker/dockerfile:1.3
 
 ARG BASE_IMAGE=pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04
-ARG PYTHON_IMAGE=pauletaylor/rapids-ide:python-builder-cuda11.6.0-ubuntu20.04
+ARG PYTHON_IMAGE=pauletaylor/rapids-ide:wheel-builder-cuda11.6.0-ubuntu20.04
 
 FROM ${BASE_IMAGE} as base
 FROM ${PYTHON_IMAGE} as python
 
-FROM base as base-amd64
+FROM python as python-amd64
 
 ONBUILD WORKDIR /usr/local/src
 ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.3.0/code-server_4.3.0_amd64.deb code-server.deb
 
-FROM base as base-arm64
+FROM python as python-arm64
 
 ONBUILD WORKDIR /usr/local/src
 ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.3.0/code-server_4.3.0_arm64.deb code-server.deb
@@ -19,7 +19,7 @@ ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.3.0/code-s
 #########################################
 # code-server
 #########################################
-FROM base-${TARGETARCH}
+FROM python-${TARGETARCH}
 
 USER root
 

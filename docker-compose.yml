@@ -41,16 +41,18 @@ services:
       - "./compose/builder/conda/plugins:/opt/rapids/.plugins:ro"
     <<: *run_with_gpu
 
-  python-builder:
-    image: pauletaylor/rapids-ide:python-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+  wheel-builder:
+    image: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     build:
-      context: compose/builder/python
+      context: compose/builder/wheel
       args:
         BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     environment:
       <<: *env_common
-    volumes:
-      - "./compose/builder/python/plugins:/opt/rapids/.plugins:ro"
+    # volumes:
+    #   - "./compose/code-server/home/rmm:/tmp/rapids/rmm"
+    #   - "./compose/builder/cpp/plugins/util:/opt/rapids/.plugins/util:ro"
+    #   - "./compose/builder/wheel/plugins/rmm/python:/opt/rapids/.plugins/rmm/python:ro"
     <<: *run_with_gpu
 
   code-server:
@@ -59,14 +61,16 @@ services:
       context: compose/code-server
       args:
         BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
-        PYTHON_IMAGE: pauletaylor/rapids-ide:python-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+        PYTHON_IMAGE: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     environment:
       <<: *env_common
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
     volumes:
-      # - "./compose/code-server/plugins/util/make-repo-plugins:/opt/rapids/.plugins/util/make-repo-plugins:ro"
+      # - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
+      # - "./compose/code-server/usr/local/bin/make-repo-plugins:/usr/local/bin/make-repo-plugins:ro"
+      # - "./compose/code-server/plugins/util:/opt/rapids/.plugins/util:ro"
       - "./compose/code-server/home:${PWD}/compose/code-server/home"
       - "/var/run/docker.sock:/var/run/docker.sock"
     <<: *run_with_gpu

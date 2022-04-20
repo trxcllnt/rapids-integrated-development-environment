@@ -15,7 +15,7 @@ FROM base as base-arm64
 # ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.3.0/code-server_4.3.0_arm64.deb code-server.deb
 
 #########################################
-# python-builder
+# wheel-builder
 #########################################
 FROM base-${TARGETARCH}
 
@@ -46,6 +46,9 @@ WORKDIR /opt/rapids
 # Add plugins
 COPY --chown=coder:coder plugins /opt/rapids/.plugins
 
-ENTRYPOINT ["fixuid", "-q", "python-builder-entrypoint"]
+ENV PATH="$PATH:/opt/rapids/.local/bin"
+ENV PYTHONPATH="$PYTHONPATH:/opt/rapids/.local/lib/python3.8/site-packages"
+
+ENTRYPOINT ["fixuid", "-q", "wheel-builder-entrypoint"]
 
 CMD ["/bin/bash", "-l"]

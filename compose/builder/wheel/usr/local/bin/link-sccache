@@ -1,0 +1,3 @@
+#! /usr/bin/env bash
+
+sudo ln -sf /usr/local/bin/sccache-gcc /usr/local/bin/gcc

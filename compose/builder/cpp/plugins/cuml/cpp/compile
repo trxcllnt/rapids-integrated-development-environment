@@ -6,5 +6,5 @@ time (
     set -x;
     cmake --build /opt/rapids/cuml/cpp/build -v -- -j${PARALLEL_LEVEL:-1} all;
     { set +x; } 2>/dev/null;
-    echo "libcuml compile time:";
+    echo -n "libcuml compile time:";
 )

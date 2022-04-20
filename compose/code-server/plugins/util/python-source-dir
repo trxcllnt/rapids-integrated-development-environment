@@ -11,10 +11,10 @@ while [[ "$#" -gt 0 ]]; do
     esac; shift;
 done
 
-PYTHON_DIR="/opt/rapids/$PROJECT"
+PYTHON_DIR="$HOME/$PROJECT"
 
 if [[ -d "$PYTHON_DIR/python" ]]; then
-    PYTHON_DIR="$PYTHON_DIR/python/$PROJECT"
+    PYTHON_DIR="$PYTHON_DIR/python"
 fi
 
 PYTHON_DIR="$PYTHON_DIR/$PROJECT"
@@ -22,7 +22,7 @@ PYTHON_DIR="$PYTHON_DIR/$PROJECT"
 while true; do
     if [[ -f "$PYTHON_DIR/setup.py" ]]; then
         break;
-    elif [[ "$PYTHON_DIR" == "/opt/rapids/$PROJECT" ]]; then
+    elif [[ "$PYTHON_DIR" == "$HOME/$PROJECT" ]]; then
         break;
     fi
     PYTHON_DIR=$(realpath -m "$PYTHON_DIR/..")

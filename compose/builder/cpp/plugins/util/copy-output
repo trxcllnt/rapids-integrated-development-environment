@@ -5,47 +5,46 @@ set -Eeo pipefail
 cd $(dirname "$(realpath "$0")")
 
 PROJECT=
-EXTERNAL_CPP_BINARY_DIR=
 EXTERNAL_CPP_SOURCE_DIR=
+EXTERNAL_CPP_BINARY_DIR=
+EXTERNAL_PYTHON_BINARY_DIR=
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --project=*) PROJECT="${1#--project=}";;
-        --bin=*) EXTERNAL_CPP_BINARY_DIR="${1#--bin=}";;
         --src=*) EXTERNAL_CPP_SOURCE_DIR="${1#--src=}";;
+        --cpp=*) EXTERNAL_CPP_BINARY_DIR="${1#--cpp=}";;
+        --python=*) EXTERNAL_PYTHON_BINARY_DIR="${1#--python=}";;
         *) ;;
     esac; shift;
 done
 
-INTERNAL_CPP_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")"
-INTERNAL_CPP_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")"
+INTERNAL_CPP_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")";
+INTERNAL_CPP_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")";
+INTERNAL_PYTHON_BINARY_DIR="$(python-binary-dir-util --project="$PROJECT")";
 
-if [[ ! -n "$INTERNAL_CPP_BINARY_DIR" || ! -d "$INTERNAL_CPP_BINARY_DIR" ]]; then
+if [[ -z "$INTERNAL_CPP_SOURCE_DIR" || ! -d "$INTERNAL_CPP_SOURCE_DIR" ]]; then
     exit 1;
 fi
 
-if [[ ! -n "$INTERNAL_CPP_SOURCE_DIR" || ! -d "$INTERNAL_CPP_SOURCE_DIR" ]]; then
+if [[ -z "$INTERNAL_CPP_BINARY_DIR" || ! -d "$INTERNAL_CPP_BINARY_DIR" ]]; then
     exit 1;
 fi
 
-J=$(nproc --ignore=2)
-
-if [[ -z "$EXTERNAL_CPP_BINARY_DIR" ]]; then
-    EXTERNAL_CPP_BINARY_DIR="$EXTERNAL_CPP_SOURCE_DIR/build";
+if [[ -z "$INTERNAL_PYTHON_BINARY_DIR" || ! -d "$INTERNAL_PYTHON_BINARY_DIR" ]]; then
+    exit 1;
 fi
 
 # Copy internal cpp binary dir to external binary dir
+if [[ -n "$EXTERNAL_CPP_BINARY_DIR" ]]; then
 (
     mkdir -p "$INTERNAL_CPP_BINARY_DIR";
     mkdir -p "$EXTERNAL_CPP_BINARY_DIR";
     mkdir -p "$EXTERNAL_CPP_SOURCE_DIR";
     rm -rf "$EXTERNAL_CPP_BINARY_DIR";
     mv "$INTERNAL_CPP_BINARY_DIR" "$EXTERNAL_CPP_BINARY_DIR";
-) || true;
 
-# Replace $INTERNAL_CPP_BINARY_DIR with $EXTERNAL_CPP_BINARY_DIR in build files
-# Replace $INTERNAL_CPP_SOURCE_DIR with $EXTERNAL_CPP_SOURCE_DIR in source files
-(
+    # Map internal to external paths in compile_commands.json
     CC_JSON="$EXTERNAL_CPP_BINARY_DIR/compile_commands.json";
 
     if [[ -f "$CC_JSON" ]]; then
@@ -80,3 +79,14 @@ fi
         )
     fi
 ) || true;
+fi
+
+# Copy internal cpp binary dir to external binary dir
+if [[ -n "$EXTERNAL_PYTHON_BINARY_DIR" ]]; then
+(
+    mkdir -p "$INTERNAL_PYTHON_BINARY_DIR";
+    mkdir -p "$EXTERNAL_PYTHON_BINARY_DIR";
+    rm -rf "$EXTERNAL_PYTHON_BINARY_DIR";
+    mv "$INTERNAL_PYTHON_BINARY_DIR" "$EXTERNAL_PYTHON_BINARY_DIR";
+) || true;
+fi

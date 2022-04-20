@@ -34,5 +34,5 @@ time (
           \
           ${@};
     { set +x; } 2>/dev/null;
-    echo "librmm configure time:";
+    echo -n "librmm configure time:";
 )
