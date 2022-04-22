@@ -3,3 +3,6 @@
 set -Eeo pipefail
 
 rm -rf ${CUMLPRIMS_MG_CPP_BINARY_DIR:-/opt/rapids/cumlprims_mg/cpp/build};
+if [[ -d "${CUMLPRIMS_MG_CPP_SOURCE_DIR:-/opt/rapids/cumlprims_mg/cpp}/build" ]]; then
+    find "${CUMLPRIMS_MG_CPP_SOURCE_DIR:-/opt/rapids/cumlprims_mg/cpp}/build" -type d -empty -delete;
+fi

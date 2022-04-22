@@ -70,7 +70,11 @@ USER coder:coder
 # Add plugins
 COPY --chown=coder:coder plugins /opt/rapids/.plugins
 
+ENV CC="gcc"
+ENV CXX="g++"
+ENV CUDA_HOME="/usr/local/cuda"
 ENV PATH="$PATH:/opt/rapids/.bin"
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CUDA_HOME/lib64:/usr/local/lib"
 
 ENTRYPOINT ["fixuid", "-q", "cpp-builder-entrypoint"]
 

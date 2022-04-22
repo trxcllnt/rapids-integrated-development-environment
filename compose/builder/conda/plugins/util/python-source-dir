@@ -17,7 +17,7 @@ if [[ -d "$PYTHON_DIR/python" ]]; then
     PYTHON_DIR="$PYTHON_DIR/python"
 fi
 
-PYTHON_DIR="$PYTHON_DIR/$PROJECT"
+PYTHON_DIR="$PYTHON_DIR/${PROJECT//\-/_}"
 
 while true; do
     if [[ -f "$PYTHON_DIR/setup.py" ]]; then

@@ -3,3 +3,6 @@
 set -Eeo pipefail
 
 rm -rf ${CUDF_CPP_BINARY_DIR:-/opt/rapids/cudf/cpp/build};
+if [[ -d "${CUDF_CPP_SOURCE_DIR:-/opt/rapids/cudf/cpp}/build" ]]; then
+    find "${CUDF_CPP_SOURCE_DIR:-/opt/rapids/cudf/cpp}/build" -type d -empty -delete;
+fi

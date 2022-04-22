@@ -49,10 +49,14 @@ services:
         BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     environment:
       <<: *env_common
-    # volumes:
-    #   - "./compose/code-server/home/rmm:/tmp/rapids/rmm"
-    #   - "./compose/builder/cpp/plugins/util:/opt/rapids/.plugins/util:ro"
-    #   - "./compose/builder/wheel/plugins/rmm/python:/opt/rapids/.plugins/rmm/python:ro"
+    env_file: .env
+    volumes:
+      - "./compose/code-server/home/rmm:${PWD}/compose/code-server/home/rmm"
+      - "./compose/code-server/home/raft:${PWD}/compose/code-server/home/raft"
+      # - "./compose/builder/cpp/plugins/util:/opt/rapids/.plugins/util:ro"
+      - "./compose/builder/wheel/plugins/rmm/python:/opt/rapids/.plugins/rmm/python:ro"
+      - "./compose/builder/wheel/plugins/ucx/python:/opt/rapids/.plugins/ucx/python:ro"
+      - "./compose/builder/wheel/plugins/raft/python:/opt/rapids/.plugins/raft/python:ro"
     <<: *run_with_gpu
 
   code-server:

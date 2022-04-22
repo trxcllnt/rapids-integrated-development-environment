@@ -1,3 +1,1 @@
-#! /usr/bin/env bash
-
-exec script -q -c "/usr/bin/sccache $*" /dev/null | cat
+/usr/bin/sccache

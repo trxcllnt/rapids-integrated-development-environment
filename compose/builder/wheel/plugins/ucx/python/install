@@ -1,0 +1,54 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+cd $(dirname "$(realpath "$0")")
+
+if pip show --disable-pip-version-check ucx-py &> /dev/null; then
+    exit 0;
+fi
+
+pip-install-util \
+    "setuptools" \
+    "cython>=0.29,<0.30"
+
+UCX_BRANCH=${UCX_BRANCH:-"branch-0.26"}
+UCX_GIT_REPO=${UCX_GIT_REPO:-"https://github.com/rapidsai/ucx-py.git"}
+
+on_exit() {
+    ERRCODE="$?";
+    unlink-sccache &>/dev/null || true;
+    sudo rm /usr/include/{ucm,ucp,ucs,uct} &>/dev/null || true;
+    sudo rm /usr/lib/lib{ucm,ucp,ucs,uct}.so &>/dev/null || true;
+    exit "$ERRCODE";
+}
+
+trap on_exit ERR EXIT HUP INT QUIT TERM STOP PWR;
+
+link-sccache
+sudo ln -s /usr/local/ucx/include/ucm /usr/include/ucm
+sudo ln -s /usr/local/ucx/include/ucp /usr/include/ucp
+sudo ln -s /usr/local/ucx/include/ucs /usr/include/ucs
+sudo ln -s /usr/local/ucx/include/uct /usr/include/uct
+sudo ln -s /usr/local/ucx/lib/libucm.so /usr/lib/libucm.so
+sudo ln -s /usr/local/ucx/lib/libucp.so /usr/lib/libucp.so
+sudo ln -s /usr/local/ucx/lib/libucs.so /usr/lib/libucs.so
+sudo ln -s /usr/local/ucx/lib/libuct.so /usr/lib/libuct.so
+
+if [ ! -d /opt/rapids/ucx-py ]; then
+    git clone --branch "$UCX_BRANCH" "$UCX_GIT_REPO" /opt/rapids/ucx-py
+fi
+
+cd /opt/rapids/ucx-py
+
+time (
+    set -x;
+    python setup.py \
+        build_ext -j${PARALLEL_LEVEL} --inplace \
+        bdist_wheel;
+    { set +x; } 2>/dev/null;
+    echo -n "ucx-py build time:";
+)
+
+mkdir -p /tmp/wheels && cp dist/*.whl /tmp/wheels/
+pip install --no-cache-dir --disable-pip-version-check --upgrade /tmp/wheels/*.whl;

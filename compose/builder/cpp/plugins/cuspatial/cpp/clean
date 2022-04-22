@@ -3,3 +3,6 @@
 set -Eeo pipefail
 
 rm -rf ${CUSPATIAL_CPP_BINARY_DIR:-/opt/rapids/cuspatial/cpp/build};
+if [[ -d "${CUSPATIAL_CPP_SOURCE_DIR:-/opt/rapids/cuspatial/cpp}/build" ]]; then
+    find "${CUSPATIAL_CPP_SOURCE_DIR:-/opt/rapids/cuspatial/cpp}/build" -type d -empty -delete;
+fi

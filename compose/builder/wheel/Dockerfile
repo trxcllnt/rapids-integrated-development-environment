@@ -38,16 +38,18 @@ RUN --mount=type=cache,target=/var/cache/apt \
  && clean-up-dependencies
 
 # Add utility scripts
-COPY --chown=root:root usr/local/bin/* /usr/local/bin/
+COPY --chown=root:root usr/local/bin /usr/local/bin
+COPY --chown=root:root --from=base /usr/local/bin/cpp-builder-entrypoint /usr/local/bin/
 
 USER coder:coder
 WORKDIR /opt/rapids
 
 # Add plugins
 COPY --chown=coder:coder plugins /opt/rapids/.plugins
+COPY --chown=coder:coder --from=base /opt/rapids/.plugins/util/* /opt/rapids/.plugins/util/
 
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PATH="$PATH:/opt/rapids/.local/bin"
-ENV PYTHONPATH="$PYTHONPATH:/opt/rapids/.local/lib/python3.8/site-packages"
 
 ENTRYPOINT ["fixuid", "-q", "wheel-builder-entrypoint"]
 

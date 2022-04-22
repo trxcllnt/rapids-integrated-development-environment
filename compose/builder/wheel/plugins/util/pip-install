@@ -1,0 +1,27 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+cd $(dirname "$(realpath "$0")")
+
+pkgs=
+
+for x in ${@}; do
+    pkg="$x";
+    pkg="$(echo "$pkg" | cut -d'>' -f1)";
+    pkg="$(echo "$pkg" | cut -d'<' -f1)";
+    pkg="$(echo "$pkg" | cut -d'=' -f1)";
+    if ! pip show --disable-pip-version-check "$pkg" &> /dev/null; then
+        pkgs="${pkgs:+$pkgs }$x";
+    fi
+done
+
+if [[ -n "$pkgs" ]]; then
+time (
+    set -x;
+    pip download --no-cache-dir --disable-pip-version-check --no-deps -d /tmp/wheels ${pkgs};
+    pip install  --no-cache-dir --disable-pip-version-check --upgrade /tmp/wheels/*.whl;
+    { set +x; } 2>/dev/null;
+    echo -n "Pip install time:";
+)
+fi

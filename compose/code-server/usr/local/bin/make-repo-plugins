@@ -114,10 +114,11 @@ rewrite_output_paths() {
         REWRITE_OUTPUT_CMDS="${REWRITE_OUTPUT_CMDS:+$REWRITE_OUTPUT_CMDS \\
           | }sed -r \"s@$inner_cpp_bin_dir@$outer_cpp_bin_dir@g\" \\
           | sed -r \"s@$inner_cpp_src_dir@$outer_cpp_src_dir@g\" \\
-          | sed -r \"s@ build@ $outer_cpp_bin_dir_relative/@g\" \\
+          | sed -r \"s@ build/@ $outer_cpp_bin_dir_relative/@g\" \\
           | sed -r \"s@$inner_python_bin_dir@$outer_python_bin_dir@g\" \\
           | sed -r \"s@$inner_python_src_dir@$outer_python_src_dir@g\" \\
-          | sed -r \"s@ build/python@ $outer_python_bin_dir_relative/@g\""
+          | sed -r \"s@ build/python@ $outer_python_bin_dir_relative/@g\" \\
+          | sed -r \"s@/opt/rapids@\$HOME@g\""
     done
     echo "$REWRITE_OUTPUT_CMDS"
 }
@@ -128,9 +129,7 @@ copy_output_cmd() {
     cmd="copy-output-util --project=\"$2\"";
     cmd+=" --src=\"\$${NAME}_CPP_SOURCE_DIR\"";
     cmd+=" --cpp=\"\$${NAME}_CPP_BINARY_DIR\"";
-    if [[ $LANG != CPP ]]; then
-        cmd+=" --$1=\"\$${NAME}_${LANG}_BINARY_DIR\"";
-    fi
+    cmd+=" --$1=\"\$${NAME}_${LANG}_BINARY_DIR\"";
     echo $cmd;
 }
 
@@ -187,7 +186,7 @@ if [[ -d "\$HOME/$repo" ]]; then
         --name "$name-$repo-$lang-\$(basename "\$tmp_env_file")" \\
         \${volumes} \\
         \${BUILD_IMAGE:-${DEFAULT_BUILD_IMAGE}} \\
-        bash -c '$cmds' _ "\${@}";
+        stdbuf -oL bash -c '$cmds' _ "\${@}";
     )
 fi
 EOF
@@ -240,59 +239,68 @@ EOF
 }
 
 make_clean_cpp_script() {
-    # echo "generating \`clean-$1-cpp\` script";
-    make_script cpp clean $1 "
-        clean-$1-cpp;";
+    repo="$1";
+    # echo "generating \`clean-$repo-cpp\` script";
+    make_script cpp clean $repo "
+        clean-$repo-cpp;";
 }
 
 make_build_cpp_script() {
-    # echo "generating \`build-$1-cpp\` script";
+    repo="$1";
+    # echo "generating \`build-$repo-cpp\` script";
     (
-        cat << EOF > "$PLUGINS_DIR/$1/cpp/build"
+        cat << EOF > "$PLUGINS_DIR/$repo/cpp/build"
 #! /usr/bin/env bash
 set -Eeo pipefail;
 cd "\$(dirname "\$(realpath "\$0")")";
 
-configure-$1-cpp && compile-$1-cpp;
+configure-$repo-cpp && compile-$repo-cpp;
 EOF
-        chmod +x "$PLUGINS_DIR/$1/cpp/build"
+        chmod +x "$PLUGINS_DIR/$repo/cpp/build"
     )
 }
 
 make_compile_cpp_script() {
-    # echo "generating \`compile-$1-cpp\` script";
-    make_script cpp compile $1 "
-        $(copy_input_cmds cpp ${@:2} $1); \\
-        compile-$1-cpp \"\${@}\" 2>&1 \\
-          | $(rewrite_output_paths ${@:2} $1); \\
-        $(copy_output_cmd cpp $1);" \
-        "${@:2}";
+    repo="$1";
+    deps="${@:2}";
+    # echo "generating \`compile-$repo-cpp\` script";
+    make_script cpp compile $repo "
+        $(copy_input_cmds cpp $deps $repo); \\
+        compile-$repo-cpp \"\${@}\" 2>&1 \\
+          | $(rewrite_output_paths $deps $repo); \\
+        $(copy_output_cmd cpp $repo);" \
+        "$deps";
 }
 
 make_configure_cpp_script() {
-    # echo "generating \`configure-$1-cpp\` script";
-    make_script cpp configure $1 "
-        $(copy_input_cmds cpp ${@:2} $1); \\
-        configure-$1-cpp \"\${@}\" 2>&1 \\
-          | $(rewrite_output_paths ${@:2} $1); \\
-        $(copy_output_cmd cpp $1);" \
-        "${@:2}";
+    repo="$1";
+    deps="${@:2}";
+    # echo "generating \`configure-$repo-cpp\` script";
+    make_script cpp configure $repo "
+        $(copy_input_cmds cpp $deps $repo); \\
+        configure-$repo-cpp \"\${@}\" 2>&1 \\
+          | $(rewrite_output_paths $deps $repo); \\
+        $(copy_output_cmd cpp $repo);" \
+        "$deps";
 }
 
 make_clean_python_script() {
-    # echo "generating \`clean-$1-python\` script";
-    make_script python clean $1 "
-        clean-$1-python;";
+    repo="$1";
+    # echo "generating \`clean-$repo-python\` script";
+    make_script python clean $repo "
+        clean-$repo-python;";
 }
 
 make_build_python_script() {
-    # echo "generating \`build-$1-python\` script";
-    make_script python build $1 "
-        $(copy_input_cmds python ${@:2} $1); \\
-        build-$1-python \"\${@}\" 2>&1 \\
-          | $(rewrite_output_paths ${@:2} $1); \\
-        $(copy_output_cmd python $1);" \
-        "${@:2}";
+    repo="$1";
+    deps="${@:2}";
+    # echo "generating \`build-$repo-python\` script";
+    make_script python build $repo "
+        $(copy_input_cmds python $deps $repo); \\
+        build-$repo-python \"\${@}\" 2>&1 \\
+          | $(rewrite_output_paths $deps $repo); \\
+        $(copy_output_cmd python $repo);" \
+        "$deps";
 }
 
 cpp-builder-entrypoint;

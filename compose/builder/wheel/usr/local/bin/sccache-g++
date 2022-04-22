@@ -2,7 +2,7 @@
 
 set -Eeo pipefail
 
-for x in $(which -a gcc); do
+for x in $(which -a g++); do
     if [[ "$x" != $0 ]]; then
         exec sccache "$x" "$@"
     fi

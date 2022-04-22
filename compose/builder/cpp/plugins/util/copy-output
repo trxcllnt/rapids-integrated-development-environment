@@ -21,6 +21,7 @@ done
 
 INTERNAL_CPP_SOURCE_DIR="$(cpp-source-dir-util --project="$PROJECT")";
 INTERNAL_CPP_BINARY_DIR="$(cpp-binary-dir-util --project="$PROJECT")";
+INTERNAL_PYTHON_SOURCE_DIR="$(python-source-dir-util --project="$PROJECT")";
 INTERNAL_PYTHON_BINARY_DIR="$(python-binary-dir-util --project="$PROJECT")";
 
 if [[ -z "$INTERNAL_CPP_SOURCE_DIR" || ! -d "$INTERNAL_CPP_SOURCE_DIR" ]]; then
@@ -28,6 +29,10 @@ if [[ -z "$INTERNAL_CPP_SOURCE_DIR" || ! -d "$INTERNAL_CPP_SOURCE_DIR" ]]; then
 fi
 
 if [[ -z "$INTERNAL_CPP_BINARY_DIR" || ! -d "$INTERNAL_CPP_BINARY_DIR" ]]; then
+    exit 1;
+fi
+
+if [[ -z "$INTERNAL_PYTHON_SOURCE_DIR" || ! -d "$INTERNAL_PYTHON_SOURCE_DIR" ]]; then
     exit 1;
 fi
 
@@ -42,7 +47,7 @@ if [[ -n "$EXTERNAL_CPP_BINARY_DIR" ]]; then
     mkdir -p "$EXTERNAL_CPP_BINARY_DIR";
     mkdir -p "$EXTERNAL_CPP_SOURCE_DIR";
     rm -rf "$EXTERNAL_CPP_BINARY_DIR";
-    mv "$INTERNAL_CPP_BINARY_DIR" "$EXTERNAL_CPP_BINARY_DIR";
+    cp -ar "$INTERNAL_CPP_BINARY_DIR" "$EXTERNAL_CPP_BINARY_DIR";
 
     # Map internal to external paths in compile_commands.json
     CC_JSON="$EXTERNAL_CPP_BINARY_DIR/compile_commands.json";
@@ -84,9 +89,30 @@ fi
 # Copy internal cpp binary dir to external binary dir
 if [[ -n "$EXTERNAL_PYTHON_BINARY_DIR" ]]; then
 (
+    EXTERNAL_HOME="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
+    EXTERNAL_HOME="${EXTERNAL_CPP_SOURCE_DIR%/$EXTERNAL_HOME}";
+    EXTERNAL_PYTHON_SOURCE_DIR="$EXTERNAL_HOME/$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_PYTHON_SOURCE_DIR")";
+    cd "$INTERNAL_PYTHON_SOURCE_DIR";
+    find build/python -name '*.so' -exec \
+        bash -c 'x={}; cp -a "$x" "$1/${x#build/python/}"' _ "$EXTERNAL_PYTHON_SOURCE_DIR" \;
+) || true;
+
+# Copy internal cpp binary dir to external binary dir
+(
     mkdir -p "$INTERNAL_PYTHON_BINARY_DIR";
     mkdir -p "$EXTERNAL_PYTHON_BINARY_DIR";
     rm -rf "$EXTERNAL_PYTHON_BINARY_DIR";
-    mv "$INTERNAL_PYTHON_BINARY_DIR" "$EXTERNAL_PYTHON_BINARY_DIR";
+    cp -ar "$INTERNAL_PYTHON_BINARY_DIR" "$EXTERNAL_PYTHON_BINARY_DIR";
+) || true;
+
+(
+    pkgs_dir="$(python -m site --user-site)";
+    pkg_name="${PROJECT//\-/_}";
+    if [[ ! -L "$pkgs_dir/$pkg_name" ]]; then
+        rm -rf "$pkgs_dir/$pkg_name";
+        ln -sf \
+            "$(realpath -m --relative-to="$pkgs_dir" "$INTERNAL_PYTHON_SOURCE_DIR/$pkg_name")" \
+            "$pkgs_dir/$pkg_name";
+    fi
 ) || true;
 fi

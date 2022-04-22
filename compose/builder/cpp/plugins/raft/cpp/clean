@@ -3,3 +3,6 @@
 set -Eeo pipefail
 
 rm -rf ${RAFT_CPP_BINARY_DIR:-/opt/rapids/raft/cpp/build};
+if [[ -d "${RAFT_CPP_SOURCE_DIR:-/opt/rapids/raft/cpp}/build" ]]; then
+    find "${RAFT_CPP_SOURCE_DIR:-/opt/rapids/raft/cpp}/build" -type d -empty -delete;
+fi
