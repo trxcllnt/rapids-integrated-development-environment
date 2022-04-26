@@ -1,8 +1,6 @@
 # RIDE (the <b>R</b>APIDS <b>IDE</b>)
 
-RIDE is a fully containerized remote development environment for working on [NVIDIA RAPIDS](https://github.com/rapidsai). It is the spiritual successor (though near-total rewrite) to [`rapids-compose`](https://github.com/trxcllnt/rapids-compose), which is a set of containerized scripts I hacked together years ago when I first joined the RAPIDS team.
-
-RIDE will launch an standardized and feature-rich remote development environment from a single command.
+RIDE is a fully containerized, standardized, and feature-rich remote development environment for [NVIDIA RAPIDS](https://github.com/rapidsai).
 
 ## Usage
 

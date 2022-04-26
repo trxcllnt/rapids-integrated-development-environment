@@ -25,8 +25,8 @@ services:
         BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04
     environment:
       <<: *env_common
-    volumes:
-      - "./compose/builder/cpp/plugins:/opt/rapids/.plugins:ro"
+    # volumes:
+    #   - "./compose/builder/cpp/plugins:/opt/rapids/.plugins:ro"
     <<: *run_with_gpu
 
   conda-builder:
@@ -37,8 +37,8 @@ services:
         BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-base-ubuntu20.04
     environment:
       <<: *env_common
-    volumes:
-      - "./compose/builder/conda/plugins:/opt/rapids/.plugins:ro"
+    # volumes:
+    #   - "./compose/builder/conda/plugins:/opt/rapids/.plugins:ro"
     <<: *run_with_gpu
 
   wheel-builder:
@@ -49,14 +49,14 @@ services:
         BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
     environment:
       <<: *env_common
-    env_file: .env
-    volumes:
-      - "./compose/code-server/home/rmm:${PWD}/compose/code-server/home/rmm"
-      - "./compose/code-server/home/raft:${PWD}/compose/code-server/home/raft"
-      # - "./compose/builder/cpp/plugins/util:/opt/rapids/.plugins/util:ro"
-      - "./compose/builder/wheel/plugins/rmm/python:/opt/rapids/.plugins/rmm/python:ro"
-      - "./compose/builder/wheel/plugins/ucx/python:/opt/rapids/.plugins/ucx/python:ro"
-      - "./compose/builder/wheel/plugins/raft/python:/opt/rapids/.plugins/raft/python:ro"
+    # env_file: .env
+    # volumes:
+    #   - "./compose/code-server/home/rmm:${PWD}/compose/code-server/home/rmm"
+    #   - "./compose/code-server/home/raft:${PWD}/compose/code-server/home/raft"
+    #   # - "./compose/builder/cpp/plugins/util:/opt/rapids/.plugins/util:ro"
+    #   - "./compose/builder/wheel/plugins/rmm/python:/opt/rapids/.plugins/rmm/python:ro"
+    #   - "./compose/builder/wheel/plugins/ucx/python:/opt/rapids/.plugins/ucx/python:ro"
+    #   - "./compose/builder/wheel/plugins/raft/python:/opt/rapids/.plugins/raft/python:ro"
     <<: *run_with_gpu
 
   code-server:
@@ -71,12 +71,12 @@ services:
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
-    volumes:
-      # - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
-      # - "./compose/code-server/usr/local/bin/make-repo-plugins:/usr/local/bin/make-repo-plugins:ro"
-      # - "./compose/code-server/plugins/util:/opt/rapids/.plugins/util:ro"
-      - "./compose/code-server/home:${PWD}/compose/code-server/home"
-      - "/var/run/docker.sock:/var/run/docker.sock"
+    # volumes:
+    #   # - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
+    #   # - "./compose/code-server/usr/local/bin/make-repo-plugins:/usr/local/bin/make-repo-plugins:ro"
+    #   # - "./compose/code-server/plugins/util:/opt/rapids/.plugins/util:ro"
+    #   - "./compose/code-server/home:${PWD}/compose/code-server/home"
+    #   - "/var/run/docker.sock:/var/run/docker.sock"
     <<: *run_with_gpu
     ports:
       - "8080:8080"
