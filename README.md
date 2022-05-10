@@ -6,7 +6,7 @@ RIDE is a fully containerized, standardized, and feature-rich remote development
 
 ```shell
 docker pull pauletaylor/rapids-ide:cpp-builder-cuda11.6.2-ubuntu20.04
-docker pull pauletaylor/rapids-ide:code-server-4.3.0-cuda11.6.2-ubuntu20.04
+docker pull pauletaylor/rapids-ide:code-server-4.4.0-cuda11.6.2-ubuntu20.04
 
 # can be anything. this will be `code-server` container's $HOME dir
 DOCKER_USER_HOME=/tmp/rapids
@@ -17,7 +17,7 @@ docker run --rm -it --runtime nvidia \
     -e "DOCKER_USER_HOME=$DOCKER_USER_HOME" \
     -v "$DOCKER_USER_HOME:$DOCKER_USER_HOME" \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    pauletaylor/rapids-ide:code-server-4.3.0-cuda11.6.2-ubuntu20.04 \
+    pauletaylor/rapids-ide:code-server-4.4.0-cuda11.6.2-ubuntu20.04 \
     --link
 ```
 

@@ -7,12 +7,12 @@ FROM ${BASE_IMAGE} as base
 FROM base as base-amd64
 
 # ONBUILD WORKDIR /usr/local/src
-# ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.3.0/code-server_4.3.0_amd64.deb code-server.deb
+# ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.4.0/code-server_4.4.0_amd64.deb code-server.deb
 
 FROM base as base-arm64
 
 # ONBUILD WORKDIR /usr/local/src
-# ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.3.0/code-server_4.3.0_arm64.deb code-server.deb
+# ONBUILD ADD https://github.com/coder/code-server/releases/download/v4.4.0/code-server_4.4.0_arm64.deb code-server.deb
 
 #########################################
 # wheel-builder

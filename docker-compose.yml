@@ -60,7 +60,7 @@ services:
     <<: *run_with_gpu
 
   code-server:
-    image: pauletaylor/rapids-ide:code-server-4.3.0-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
+    image: pauletaylor/rapids-ide:code-server-4.4.0-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
     build:
       context: compose/code-server
       args:
