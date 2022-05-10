@@ -107,12 +107,12 @@ $(for x in $(list-repos); do echo "\
         "doxdocgen.generic.returnTemplate": "@return ",
 
         "C_Cpp.vcpkg.enabled": false,
-        "C_Cpp.default.cStandard": "gnu17",
-        "C_Cpp.default.cppStandard": "c++17",
-        "C_Cpp.default.compilerArgs": ["-std=c++17"],
         "C_Cpp.default.compilerPath": "",
         "C_Cpp.autoAddFileAssociations": false,
-        "C_Cpp.default.compileCommands": "\${workspaceFolder}/compile_commands.json",
+        "C_Cpp.intelliSenseCacheSize": 0,
+        "C_Cpp.intelliSenseEngine": "Default",
+        "C_Cpp.intelliSenseEngineFallback": "Disabled",
+        "C_Cpp.loggingLevel": "Debug",
 
         "files.trimFinalNewlines": true,
         "files.insertFinalNewline": true,

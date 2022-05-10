@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1.3
 
-ARG BASE_IMAGE=nvidia/cuda:11.6.0-base-ubuntu20.04
+ARG BASE_IMAGE=nvidia/cuda:11.6.2-base-ubuntu20.04
+ARG CPP_IMAGE=pauletaylor/rapids-ide:cpp-builder-cuda11.6.2-ubuntu20.04
 
+FROM ${CPP_IMAGE} as cpp
 FROM ${BASE_IMAGE} as base
 
 FROM base as base-amd64
@@ -50,6 +52,7 @@ USER coder:coder
 
 # Add plugins
 COPY --chown=coder:coder plugins /opt/rapids/.plugins
+COPY --chown=coder:coder --from=cpp /opt/rapids/.plugins/util/* /opt/rapids/.plugins/util/
 
 ENV PATH="$PATH:/opt/rapids/.bin:/opt/conda/bin"
 

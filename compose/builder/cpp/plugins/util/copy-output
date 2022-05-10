@@ -83,10 +83,23 @@ if [[ -n "$EXTERNAL_CPP_BINARY_DIR" ]]; then
             ln -sf "$(realpath --relative-to="$EXTERNAL_CPP_SOURCE_DIR" "$CC_JSON")"
         )
     fi
+
+    mkdir -p "$EXTERNAL_CPP_SOURCE_DIR/.vscode";
+    cat << EOF > "$EXTERNAL_CPP_SOURCE_DIR/.vscode/c_cpp_properties.json"
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "$PROJECT",
+            "compileCommands": "$EXTERNAL_CPP_SOURCE_DIR/compile_commands.json"
+        }
+    ]
+}
+EOF
 ) || true;
 fi
 
-# Copy internal cpp binary dir to external binary dir
+# Copy internal python object files to external source dir
 if [[ -n "$EXTERNAL_PYTHON_BINARY_DIR" ]]; then
 (
     EXTERNAL_HOME="$(realpath -m --relative-to="/opt/rapids" "$INTERNAL_CPP_SOURCE_DIR")";
@@ -97,7 +110,7 @@ if [[ -n "$EXTERNAL_PYTHON_BINARY_DIR" ]]; then
         bash -c 'x={}; cp -a "$x" "$1/${x#build/python/}"' _ "$EXTERNAL_PYTHON_SOURCE_DIR" \;
 ) || true;
 
-# Copy internal cpp binary dir to external binary dir
+# Copy internal python binary dir to external binary dir
 (
     mkdir -p "$INTERNAL_PYTHON_BINARY_DIR";
     mkdir -p "$EXTERNAL_PYTHON_BINARY_DIR";

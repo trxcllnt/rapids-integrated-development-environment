@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.3
 
-ARG BASE_IMAGE=pauletaylor/rapids-ide:cpp-builder-cuda11.6.0-ubuntu20.04
-ARG PYTHON_IMAGE=pauletaylor/rapids-ide:wheel-builder-cuda11.6.0-ubuntu20.04
+ARG BASE_IMAGE=pauletaylor/rapids-ide:cpp-builder-cuda11.6.2-ubuntu20.04
+ARG PYTHON_IMAGE=pauletaylor/rapids-ide:wheel-builder-cuda11.6.2-ubuntu20.04
 
 FROM ${BASE_IMAGE} as base
 FROM ${PYTHON_IMAGE} as python

@@ -16,13 +16,13 @@ x-common-environment: &env_common
 services:
 
   cpp-builder:
-    image: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    image: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
     build:
       context: compose/builder/cpp
       args:
         GCC_VERSION: ${GCC_VERSION:-9}
         UXC_VERSION: ${UXC_VERSION:-1.11}
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-devel-ubuntu20.04
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.2}-devel-ubuntu20.04
     environment:
       <<: *env_common
     # volumes:
@@ -30,11 +30,11 @@ services:
     <<: *run_with_gpu
 
   conda-builder:
-    image: pauletaylor/rapids-ide:conda-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    image: pauletaylor/rapids-ide:conda-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
     build:
       context: compose/builder/conda
       args:
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.0}-base-ubuntu20.04
+        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.2}-base-ubuntu20.04
     environment:
       <<: *env_common
     # volumes:
@@ -42,11 +42,11 @@ services:
     <<: *run_with_gpu
 
   wheel-builder:
-    image: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    image: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
     build:
       context: compose/builder/wheel
       args:
-        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
     environment:
       <<: *env_common
     # env_file: .env
@@ -60,23 +60,23 @@ services:
     <<: *run_with_gpu
 
   code-server:
-    image: pauletaylor/rapids-ide:code-server-4.3.0-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+    image: pauletaylor/rapids-ide:code-server-4.3.0-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
     build:
       context: compose/code-server
       args:
-        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
-        PYTHON_IMAGE: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04
+        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
+        PYTHON_IMAGE: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
     environment:
       <<: *env_common
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
       DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
-    # volumes:
-    #   # - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
-    #   # - "./compose/code-server/usr/local/bin/make-repo-plugins:/usr/local/bin/make-repo-plugins:ro"
-    #   # - "./compose/code-server/plugins/util:/opt/rapids/.plugins/util:ro"
-    #   - "./compose/code-server/home:${PWD}/compose/code-server/home"
-    #   - "/var/run/docker.sock:/var/run/docker.sock"
+    volumes:
+      # - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
+      # - "./compose/code-server/usr/local/bin/make-repo-plugins:/usr/local/bin/make-repo-plugins:ro"
+      # - "./compose/code-server/plugins/util:/opt/rapids/.plugins/util:ro"
+      - "./compose/code-server/home:${PWD}/compose/code-server/home"
+      - "/var/run/docker.sock:/var/run/docker.sock"
     <<: *run_with_gpu
     ports:
       - "8080:8080"

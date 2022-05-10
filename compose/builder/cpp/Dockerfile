@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.3
 
-ARG BASE_IMAGE=nvidia/cuda:11.6.0-devel-ubuntu20.04
+ARG BASE_IMAGE=nvidia/cuda:11.6.2-devel-ubuntu20.04
 ARG GDAL_IMAGE=osgeo/gdal:ubuntu-full-3.3.1
 
 FROM ${BASE_IMAGE} as base

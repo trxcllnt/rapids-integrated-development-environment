@@ -20,7 +20,7 @@ cd $(dirname "$(realpath "$0")")/..;
 ###
 
 PLUGINS_DIR="/opt/rapids/.plugins";
-DEFAULT_BUILD_IMAGE="pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.0}-ubuntu20.04";
+DEFAULT_BUILD_IMAGE="pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04";
 
 get_env_var_name() {
     name="$(echo $1 | tr '[:lower:]' '[:upper:]')";
