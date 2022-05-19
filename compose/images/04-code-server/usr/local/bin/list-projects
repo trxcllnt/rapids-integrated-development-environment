@@ -1,0 +1,7 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail;
+
+cd "$(dirname "$(realpath "$0")")";
+
+echo "$(IFS=,; echo $code_ide_projects)";

@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+rm -rf ${CUGRAPH_CPP_BINARY_DIR:-/opt/rapids/cugraph/cpp/build};
+if [[ -d "${CUGRAPH_CPP_SOURCE_DIR:-/opt/rapids/cugraph/cpp}/build" ]]; then
+    find "${CUGRAPH_CPP_SOURCE_DIR:-/opt/rapids/cugraph/cpp}/build" -type d -empty -delete;
+fi

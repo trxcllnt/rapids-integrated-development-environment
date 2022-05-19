@@ -1,0 +1,62 @@
+#! /usr/bin/env bash
+
+export DEBIAN_FRONTEND=noninteractive
+
+# https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
+rm -f /etc/apt/apt.conf.d/docker-clean;
+echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+#######################################################
+# Install apt repos
+#######################################################
+
+# Install kitware cmake apt repository
+wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
+  | gpg --dearmor - \
+  | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+
+cat << EOF > /etc/apt/sources.list.d/kitware.list
+deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main
+EOF
+
+# Use official git-core PPA
+add-apt-repository --no-update -y ppa:git-core/ppa
+# Use latest Ubuntu C++ toolchains
+add-apt-repository --no-update -y ppa:ubuntu-toolchain-r/test
+
+#######################################################
+# Install dependencies
+#######################################################
+apt update
+apt install -y --no-install-recommends          \
+    git                                         \
+    `# C++ build tools`                         \
+    {gcc,g++}-${GCC_VERSION}                    \
+    make cmake doxygen ninja-build;
+
+# Remove any existing gcc and g++ alternatives
+(update-alternatives --remove-all cc  >/dev/null 2>&1 || true)
+(update-alternatives --remove-all c++ >/dev/null 2>&1 || true)
+(update-alternatives --remove-all gcc >/dev/null 2>&1 || true)
+(update-alternatives --remove-all g++ >/dev/null 2>&1 || true)
+(update-alternatives --remove-all gcov >/dev/null 2>&1 || true)
+
+# Install alternatives for gcc/g++/gcov/cc/c++
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} 100
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION} 100
+update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-${GCC_VERSION} 100
+
+update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 999
+update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 999
+
+# Set gcc-${GCC_VERSION} as the default gcc
+update-alternatives --set gcc /usr/bin/gcc-${GCC_VERSION}
+update-alternatives --set g++ /usr/bin/g++-${GCC_VERSION}
+update-alternatives --set gcov /usr/bin/gcov-${GCC_VERSION}
+
+#######################################################
+# Install sccache
+#######################################################
+tar -C /usr/bin -f /usr/local/src/sccache.tar.gz \
+    --wildcards --strip-components=1 -x */sccache \
+ && chmod +x /usr/bin/sccache

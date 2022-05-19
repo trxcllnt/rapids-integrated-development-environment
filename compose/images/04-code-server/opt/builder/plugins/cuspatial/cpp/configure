@@ -1,0 +1,52 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+BUILD_BENCH=${BUILD_BENCH:-OFF}
+BUILD_TESTS=${BUILD_TESTS:-OFF}
+CUDA_LINEINFO=${CUDA_LINEINFO:-OFF}
+DISABLE_DEPRECATION_WARNINGS=${DISABLE_DEPRECATION_WARNINGS:-ON}
+
+CMAKE_BUILD_TYPE=${BUILD_TYPE:-Release}
+CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES:-NATIVE}
+CFLAGS="${CFLAGS:+$CFLAGS }-fdiagnostics-color=always"
+CXXFLAGS="${CXXFLAGS:+$CXXFLAGS }-fdiagnostics-color=always"
+CUDAFLAGS="${CUDAFLAGS:+$CUDAFLAGS }-Xcompiler=-fdiagnostics-color=always"
+
+BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-ON}
+
+if [[ $BUILD_SHARED_LIBS != OFF ]]; then
+    BUILD_SHARED_LIBS=ON
+fi
+
+time (
+    set -x;
+    CFLAGS=${CFLAGS} \
+    CXXFLAGS=${CXXFLAGS} \
+    CUDAFLAGS=${CUDAFLAGS} \
+    cmake -GNinja \
+          -S /opt/rapids/cuspatial/cpp \
+          -B /opt/rapids/cuspatial/cpp/build \
+          \
+          -D rmm_ROOT=/opt/rapids/rmm/build \
+          -D cudf_ROOT=/opt/rapids/cudf/cpp/build \
+          \
+          -D BUILD_TESTS=${BUILD_TESTS} \
+          -D BUILD_BENCHMARKS=${BUILD_BENCH} \
+          -D DISABLE_DEPRECATION_WARNING=${DISABLE_DEPRECATION_WARNINGS} \
+          \
+          -D BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} \
+          \
+          -D CUDA_ENABLE_LINEINFO=${CUDA_LINEINFO} \
+          \
+          -D CMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+          -D CMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHITECTURES} \
+          -D CMAKE_C_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          -D CMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          -D CMAKE_CUDA_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+          \
+          ${@};
+    { set +x; } 2>/dev/null;
+    echo -n "libcuspatial configure time:";
+)

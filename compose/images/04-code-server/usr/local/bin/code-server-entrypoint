@@ -1,0 +1,65 @@
+#! /usr/bin/env bash
+
+set -Eeuo pipefail
+
+if [[ ! "$(cat /etc/group | grep -F "docker")" ]]; then
+    sudo groupadd -g ${DOCKERD_GROUP:-998} docker
+fi
+
+if [[ ! "$(id -nGz "$USER" | grep -zxF "docker")" ]]; then
+    sudo usermod -aG docker "$USER"
+fi
+
+# https://stackoverflow.com/a/63311331/3117331
+sudo chgrp docker $(which docker)
+sudo chmod g+s $(which docker)
+
+#######################################################
+# Install code-server extensions
+#######################################################
+(
+install_code_server_extensions() {
+    for EXT in ${@}; do
+        if [ ! "$(code-server --list-extensions | grep $EXT)" ]; then
+            code-server --install-extension $EXT
+        fi
+    done
+}
+
+install_code_server_extensions                \
+    `# CMake language support`                \
+    twxs.cmake                                \
+    `# Clang-Format`                          \
+    xaver.clang-format                        \
+    `# Doxygen Documentation Generator`       \
+    cschlosser.doxdocgen
+
+# Tasks Shell Input
+if [ ! "$(code-server --list-extensions | grep augustocdias.tasks-shell-input)" ]; then
+    code-server --install-extension /usr/local/src/tasks-shell-input.vsix || true;
+fi
+# MS C++ Tools
+if [ ! "$(code-server --list-extensions | grep ms-vscode.cpptools)" ]; then
+    code-server --install-extension /usr/local/src/ms-vscode.cpptools.vsix || true;
+fi
+# NVIDIA Nsight
+if [ ! "$(code-server --list-extensions | grep nvidia.nsight-vscode-edition)" ]; then
+    code-server --install-extension /usr/local/src/nsight-vscode.vsix || true;
+fi
+)
+
+if [[ ! "${PORT:-}" ]]; then
+    PORT=8080
+fi
+
+mkdir -p "$HOME/.envs";
+mkdir -p "$HOME/.config";
+mkdir -p "$HOME/.vscode-server";
+mkdir -p "$HOME/.local/share/code-server";
+
+# Set up symlinks so connecting to this container via VSCode Remote Containers also works
+ln -sf "$HOME/.local/share/code-server" "$HOME/.vscode-server/data";
+ln -sf "$HOME/.local/share/code-server/extensions" "$HOME/.vscode-server/extensions";
+ln -sf "$HOME/.local/share/code-server/CachedExtensionVSIXs" "$HOME/.vscode-server/extensionsCache";
+
+exec dumb-init /usr/bin/code-server --bind-addr "0.0.0.0:$PORT" "$HOME" "$@";

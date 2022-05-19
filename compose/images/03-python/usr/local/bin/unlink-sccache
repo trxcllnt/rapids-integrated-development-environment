@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+if [[ -L "/usr/local/bin/gcc" ]]; then
+    sudo rm /usr/local/bin/gcc >/dev/null 2>&1 || true
+fi
+
+if [[ -L "/usr/local/bin/g++" ]]; then
+    sudo rm /usr/local/bin/g++ >/dev/null 2>&1 || true
+fi

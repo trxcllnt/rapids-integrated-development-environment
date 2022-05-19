@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+echo "$(envsubst < <(echo "\$$(normalize-repo-name "$1")_upstream"))";

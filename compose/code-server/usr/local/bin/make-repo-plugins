@@ -222,7 +222,7 @@ $(for dep in $deps; do echo "    clone-$dep;"; done)
         UPSTREAM_URL="github.com/\$UPSTREAM";
         while true; do
             read -p "\\\`\$UPSTREAM_URL\\\` not found.
-Fork \\\`$UPSTREAM_URL\\\` into \\\`\$ORIGIN_URL\\\` now (y/n)? " CHOICE </dev/tty
+Fork \\\`\$UPSTREAM_URL\\\` into \\\`\$ORIGIN_URL\\\` now (y/n)? " CHOICE </dev/tty
             case \$CHOICE in
                 [Nn]* ) REPO="\$UPSTREAM"; break;;
                 [Yy]* ) gh repo fork \$UPSTREAM --clone=false; break;;

@@ -1,0 +1,20 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+cd $(dirname "$(realpath "$0")")
+
+REPO_SRC=${RAFT_SOURCE_DIR:-/opt/rapids/raft}
+PYTHON_SRC=${RAFT_PYTHON_SOURCE_DIR:-"$REPO_SRC"/python}
+PYTHON_BIN=${RAFT_PYTHON_BINARY_DIR:-"$PYTHON_SRC"/build}
+
+rm -rf "$PYTHON_BIN";
+rm -rf "$PYTHON_SRC/dist";
+rm -rf "$PYTHON_SRC/".egg-info;
+find "$REPO_SRC" -type f -name '*.pyc' -delete;
+find "$REPO_SRC" -type d -name '__pycache__' -delete;
+find "$PYTHON_SRC" -type f -name '*.so' -delete;
+find "$PYTHON_SRC" -type f -name '*.cpp' -delete;
+if [[ -d "$PYTHON_SRC"/build ]]; then
+    find "$PYTHON_SRC"/build -type d -empty -delete;
+fi

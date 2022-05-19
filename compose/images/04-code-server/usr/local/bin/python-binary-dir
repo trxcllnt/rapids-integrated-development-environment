@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+repo="$1";
+prefix="$(python-source-dir $repo)/build/cuda-$CUDA_VERSION";
+branch_name="$(git -C "$HOME/$repo" branch --show-current)";
+echo "$prefix/${branch_name//\//__}/${PYTHON_BUILDER:-wheel}";

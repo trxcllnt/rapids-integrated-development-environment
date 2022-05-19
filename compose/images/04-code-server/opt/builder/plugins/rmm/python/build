@@ -1,0 +1,44 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+cd $(dirname "$(realpath "$0")")
+
+cd /opt/rapids/rmm/python
+
+pip-install-util \
+    "numba>=0.54.0" \
+    "cython>=0.29,<0.30" \
+    "scikit-build>=0.13.1" \
+    "cuda-python==$CUDA_VERSION"
+
+time (
+    set -x;
+
+    rm -rf build/python;
+    mkdir -p build/python;
+    rm -rf "$RMM_PYTHON_BINARY_DIR";
+    mkdir -p "$RMM_PYTHON_BINARY_DIR";
+
+    python setup.py \
+            -G Ninja --skip-generator-test \
+        bdist_wheel -d build/python \
+         -- -D FIND_RMM_CPP=ON \
+            -D RMM_ROOT=/opt/rapids/rmm/build \
+            -D CMAKE_C_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+            -D CMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+            -D CMAKE_CUDA_COMPILER_LAUNCHER=/usr/local/bin/sccache \
+         -- -j ${PARALLEL_LEVEL:-1} \
+        ;
+
+    { set +x; } 2>/dev/null;
+
+    mkdir -p /tmp/wheels && cp build/python/*.whl /tmp/wheels/
+
+    mv _skbuild/*/cmake-install/rmm build/python/rmm
+
+    python setup.py clean;
+    rm -rf _skbuild *.egg-info;
+
+    echo -n "RMM build time:";
+)

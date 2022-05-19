@@ -1,0 +1,70 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+#######################################################
+# Add non-root `user` user with passwordless sudo
+#######################################################
+adduser \
+    --gecos '' \
+    --shell /bin/bash \
+    --home /home/user \
+    --disabled-password user
+
+echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd
+
+#######################################################
+# Install fixuid
+#######################################################
+
+# https://github.com/boxboat/fixuid#install-fixuid-in-dockerfile
+tar -C /usr/bin -xf /usr/local/src/fixuid.tar.gz
+chown root:root /usr/bin/fixuid
+chmod 4755 /usr/bin/fixuid
+mkdir -p /etc/fixuid
+
+cat << EOF > /etc/fixuid/config.yml
+user: user
+group: user
+paths:
+  - /home/user
+EOF
+
+#######################################################
+# Customize .bashrc
+#######################################################
+
+for x in /etc/skel/.bashrc /home/user/.bashrc; do
+    # yellow + blue terminal prompt
+    sed -ri "s/32m/33m/g" "$x";
+    sed -ri "s/34m/36m/g" "$x";
+    # Enable globstar
+    sed -ri "s/#shopt -s globstar/shopt -s globstar/g" "$x";
+    sed -ri "s/#export GCC_COLORS/export GCC_COLORS/g" "$x";
+done
+
+# Add infinite bash history, colorized compiler output
+cat << EOF | tee -a /home/user/.bashrc | tee -a /etc/skel/.bashrc
+
+# Infinite bash history
+export HISTSIZE=-1;
+export HISTFILESIZE=-1;
+export HISTCONTROL=ignoreboth;
+
+# Change the file location because certain bash sessions truncate .bash_history file upon close.
+# http://superuser.com/questions/575479/bash-history-truncated-to-500-lines-on-each-login
+export HISTFILE="\$HOME/.eternal_bash_history";
+
+mkdir -p "\$(dirname \$HISTFILE)" && touch "\$HISTFILE";
+
+# flush commands to .bash_history immediately
+export PROMPT_COMMAND="history -a; \$PROMPT_COMMAND";
+
+if [[ -d "\$HOME/.local/bin" ]]; then
+    export PATH="\$HOME/.local/bin:\$PATH";
+fi
+
+if [[ -n "\$CONDA_PREFIX" && -d "\$CONDA_PREFIX/bin" ]]; then
+    export PATH="\$CONDA_PREFIX/bin:\$PATH";
+fi
+EOF

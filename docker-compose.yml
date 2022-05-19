@@ -1,5 +1,11 @@
 version: "3.8"
 
+x-common-config: &common_config
+  tty: true
+  environment:
+    # Colorize the terminal in the container if possible
+    TERM: "${TERM:-}"
+
 x-run-with-gpu: &run_with_gpu
   deploy:
     resources:
@@ -8,76 +14,80 @@ x-run-with-gpu: &run_with_gpu
           - capabilities:
             - gpu
 
-x-common-environment: &env_common
-  # Colorize the terminal in the container if possible
-  TERM: "${TERM:-}"
-  NVIDIA_DRIVER_CAPABILITIES: all
-
 services:
-
-  cpp-builder:
-    image: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
+  01-base:
+    image: pauletaylor/rapids-ide:cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
-      context: compose/builder/cpp
+      context: compose/images/01-base
+      args:
+        LINUX_DISTRO: ${LINUX_DISTRO:-ubuntu20.04}
+        CUDA_VERSION_MAJOR: ${CUDA_VERSION_MAJOR:-11}
+        CUDA_VERSION_MINOR: ${CUDA_VERSION_MINOR:-6}
+        CUDA_VERSION_PATCH: ${CUDA_VERSION_PATCH:-2}
+    <<: *common_config
+    <<: *run_with_gpu
+
+  02-cpp:
+    image: pauletaylor/rapids-ide:gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    build:
+      context: compose/images/02-cpp
       args:
         GCC_VERSION: ${GCC_VERSION:-9}
-        UXC_VERSION: ${UXC_VERSION:-1.11}
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.2}-devel-ubuntu20.04
-    environment:
-      <<: *env_common
-    # volumes:
-    #   - "./compose/builder/cpp/plugins:/opt/rapids/.plugins:ro"
+        BASE_IMAGE: pauletaylor/rapids-ide:cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    <<: *common_config
     <<: *run_with_gpu
 
-  conda-builder:
-    image: pauletaylor/rapids-ide:conda-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
+  02-mamba:
+    image: pauletaylor/rapids-ide:mamba${MAMBA_VERSION:-4.12.0-0}-python${PYTHON_VERSION:-3.9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
-      context: compose/builder/conda
+      context: compose/images/02-mamba
       args:
-        BASE_IMAGE: nvidia/cuda:${CUDA_VERSION:-11.6.2}-base-ubuntu20.04
-    environment:
-      <<: *env_common
-    # volumes:
-    #   - "./compose/builder/conda/plugins:/opt/rapids/.plugins:ro"
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.9}
+        MAMBA_VERSION: ${MAMBA_VERSION:-4.12.0-0}
+        BASE_IMAGE: pauletaylor/rapids-ide:cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    <<: *common_config
     <<: *run_with_gpu
 
-  wheel-builder:
-    image: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
+  03-python:
+    image: pauletaylor/rapids-ide:python${PYTHON_VERSION:-3.9}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
-      context: compose/builder/wheel
+      context: compose/images/03-python
       args:
-        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
-    environment:
-      <<: *env_common
-    # env_file: .env
-    # volumes:
-    #   - "./compose/code-server/home/rmm:${PWD}/compose/code-server/home/rmm"
-    #   - "./compose/code-server/home/raft:${PWD}/compose/code-server/home/raft"
-    #   # - "./compose/builder/cpp/plugins/util:/opt/rapids/.plugins/util:ro"
-    #   - "./compose/builder/wheel/plugins/rmm/python:/opt/rapids/.plugins/rmm/python:ro"
-    #   - "./compose/builder/wheel/plugins/ucx/python:/opt/rapids/.plugins/ucx/python:ro"
-    #   - "./compose/builder/wheel/plugins/raft/python:/opt/rapids/.plugins/raft/python:ro"
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.9}
+        BASE_IMAGE: pauletaylor/rapids-ide:gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    <<: *common_config
     <<: *run_with_gpu
 
-  code-server:
-    image: pauletaylor/rapids-ide:code-server-4.4.0-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
+  04-code-server:
+    image: pauletaylor/rapids-ide:code-server${CODE_SERVER_VERSION:-4.4.0}-python${PYTHON_VERSION:-3.9}-mamba${MAMBA_VERSION:-4.12.0-0}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
-      context: compose/code-server
+      context: compose/images/04-code-server
       args:
-        BASE_IMAGE: pauletaylor/rapids-ide:cpp-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
-        PYTHON_IMAGE: pauletaylor/rapids-ide:wheel-builder-cuda${CUDA_VERSION:-11.6.2}-ubuntu20.04
+        LINUX_DISTRO: ${LINUX_DISTRO:-ubuntu20.04}
+        GCC_VERSION: ${GCC_VERSION:-9}
+        MAMBA_VERSION: ${MAMBA_VERSION:-4.12.0-0}
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.9}
+        CLANG_FORMAT_VERSION: ${CLANG_FORMAT_VERSION:-11}
+        CUDA_VERSION_MAJOR: ${CUDA_VERSION_MAJOR:-11}
+        CUDA_VERSION_MINOR: ${CUDA_VERSION_MINOR:-6}
+        CUDA_VERSION_PATCH: ${CUDA_VERSION_PATCH:-2}
+        CODE_SERVER_VERSION: ${CODE_SERVER_VERSION:-4.4.0}
+        BASE_IMAGE: pauletaylor/rapids-ide:python${PYTHON_VERSION:-3.9}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+        MAMBA_IMAGE: pauletaylor/rapids-ide:mamba${MAMBA_VERSION:-4.12.0-0}-python${PYTHON_VERSION:-3.9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    env_file: .env
     environment:
-      <<: *env_common
+      # Colorize the terminal in the container if possible
+      TERM: "${TERM:-}"
       # -e DOCKERD_GROUP=$(cat /etc/group | grep -F "docker:" | cut -d':' -f3)
       DOCKERD_GROUP: "${DOCKERD_GROUP:-998}"
-      DOCKER_USER_HOME: "${PWD}/compose/code-server/home"
+      DOCKER_USER_HOME: "/tmp/code-server-home"
     volumes:
-      # - "./compose/code-server/usr/local/bin/code-server-entrypoint:/usr/local/bin/code-server-entrypoint:ro"
-      # - "./compose/code-server/usr/local/bin/make-repo-plugins:/usr/local/bin/make-repo-plugins:ro"
-      # - "./compose/code-server/plugins/util:/opt/rapids/.plugins/util:ro"
-      - "./compose/code-server/home:${PWD}/compose/code-server/home"
       - "/var/run/docker.sock:/var/run/docker.sock"
-    <<: *run_with_gpu
+      - "/tmp/code-server-home:/tmp/code-server-home"
+      - "./compose/images/04-code-server/usr/local/bin/builder:/usr/local/bin/builder:ro"
+      - "./compose/images/04-code-server/usr/local/bin/install-plugins:/usr/local/bin/install-plugins:ro"
+      - "./compose/images/04-code-server/usr/local/bin/run-in-docker-build:/usr/local/bin/run-in-docker-build:ro"
     ports:
       - "8080:8080"
     command: --link
+    <<: *run_with_gpu

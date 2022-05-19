@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+repo="$1";
+prefix="$(cpp-source-dir $repo)/build/cuda-$CUDA_VERSION";
+branch_name="$(git -C "$HOME/$repo" branch --show-current)";
+build_type="$(echo "${BUILD_TYPE:-Release}" | tr '[:upper:]' '[:lower:]')";
+echo "$prefix/${branch_name//\//__}/$build_type";

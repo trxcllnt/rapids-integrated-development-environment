@@ -1,0 +1,48 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail;
+
+cd "$(dirname "$(realpath "$0")")";
+
+cmds=;
+repo=;
+prefix=${code_ide_builder_prefix:-/opt};
+base_image="pauletaylor/rapids-ide:gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}"
+devel_image="nvidia/cuda:${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-devel-${LINUX_DISTRO:-ubuntu20.04}";
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --repo=*) repo="${1#--repo=}";;
+        --prefix=*) prefix="${1#--prefix=}";;
+        --base_image=*) base_image="${1#--base_image=}";;
+        --devel_image=*) devel_image="${1#--devel_image=}";;
+        -- ) shift; cmds="$(echo -ne "$@")"; break;;
+        *) ;;
+    esac; shift;
+done
+
+deps="$(envsubst < <(echo "\$${repo}_dependencies"))";
+
+plugins="$(if [[ -d "$HOME/.plugins" ]]; then echo "$HOME/.plugins"; else echo "/opt/builder/plugins"; fi)";
+deps_="$(IFS=,; echo $deps)";
+mounts=$(
+for name in $repo $deps_; do echo "
+    \\
+    --${name}_home=$HOME/$name \\
+    --${name}_cpp_source_dir=$(cpp-source-dir $name) \\
+    --${name}_cpp_binary_dir=$(cpp-binary-dir $name) \\
+    --${name}_python_source_dir=$(python-source-dir $name) \\
+    --${name}_python_binary_dir=$(python-binary-dir $name) \\";
+done
+)
+
+exec /usr/local/bin/builder/build \
+    --repo="$repo" \
+    --prefix="$prefix" \
+    --deps="plugins,$deps" \
+    --base_image="$base_image" \
+    --devel_image="$devel_image" \
+    --plugins_home="$plugins" \
+    ${mounts} \
+    \
+    -- "$cmds"

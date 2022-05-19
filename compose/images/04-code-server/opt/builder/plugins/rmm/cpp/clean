@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+rm -rf ${RMM_CPP_BINARY_DIR:-/opt/rapids/rmm/build};
+if [[ -d "${RMM_CPP_SOURCE_DIR:-/opt/rapids/rmm}/build" ]]; then
+    find "${RMM_CPP_SOURCE_DIR:-/opt/rapids/rmm}/build" -type d -empty -delete;
+fi

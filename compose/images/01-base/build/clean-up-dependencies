@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+apt autoremove -y;
+apt clean;
+
+rm /etc/apt/apt.conf.d/keep-cache
+
+rm -rf /tmp/*;
+rm -rf /var/tmp/*;
+rm -rf /usr/local/src/*.tar.gz

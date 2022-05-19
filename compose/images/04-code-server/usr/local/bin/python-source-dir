@@ -1,0 +1,24 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+repo="$1";
+
+path="$HOME/$repo";
+
+if [[ -d "$path/python" ]]; then
+    path="$path/python";
+fi
+
+path="$path/$(normalize-repo-name "$repo")";
+
+while true; do
+    if [[ -f "$path/setup.py" ]]; then
+        break;
+    elif [[ "$path" == "$HOME/$repo" ]]; then
+        break;
+    fi
+    path=$(realpath -m "$path/..");
+done
+
+echo "${path#$HOME/}";

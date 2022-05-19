@@ -1,0 +1,16 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+apt autoremove -y;
+apt clean;
+
+rm /etc/apt/apt.conf.d/keep-cache
+
+rm -rf /tmp/*;
+rm -rf /var/tmp/*;
+rm -rf /usr/local/src/*.tar.gz;
+
+find /opt/conda -follow -type f -name '*.a' -delete;
+find /opt/conda -follow -type f -name '*.pyc' -delete;
+conda clean -afy;

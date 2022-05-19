@@ -1,0 +1,22 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+repo="$1";
+
+path="$HOME/$repo"
+
+if [[ -d "$path/cpp" ]]; then
+    path="$path/cpp"
+fi
+
+while true; do
+    if [[ -f "$path/CMakeLists.txt" ]]; then
+        break;
+    elif [[ "$path" == "$HOME/$repo" ]]; then
+        break;
+    fi
+    path=$(realpath -m "$path/..")
+done
+
+echo "${path#$HOME/}";

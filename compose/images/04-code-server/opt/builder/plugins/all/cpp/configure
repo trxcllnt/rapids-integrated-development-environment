@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+for repo in $(list-projects); do
+    if [ -n $(which configure-$repo-cpp) ]; then
+        (set -x; configure-$repo-cpp "$@");
+    fi
+done

@@ -1,0 +1,25 @@
+#! /usr/bin/env bash
+
+set -Eeuo pipefail
+
+ORIG="$HOME";
+HOME="${DOCKER_USER_HOME:-$HOME}";
+
+if [[ "$ORIG" != "$HOME" ]]; then
+    # Ensure `sudo` works when modifying the user, otherwise the
+    # current container UID may not exist in the passwd database
+    eval "$(fixuid -q)";
+    sudo mkdir -p "$HOME";
+    sudo usermod -d "$HOME" "$USER";
+    sudo chown "$USER:$USER" "$HOME";
+    sudo sed -i "s@/$ORIG@$HOME@g" /etc/fixuid/config.yml;
+    for src in $(find "$ORIG" -maxdepth 1 | tail -n+2); do
+        dst="$(realpath -m "$HOME/${src#$ORIG/}")";
+        if [[ ! -f "$dst" && ! -d "$dst" ]]; then
+            mv "$src" "$HOME"/;
+        fi
+    done
+    cd "$HOME";
+fi
+
+exec fixuid -q "$@";

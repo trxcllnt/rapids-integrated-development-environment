@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+rm -rf ${CUML_CPP_BINARY_DIR:-/opt/rapids/cuml/cpp/build};
+if [[ -d "${CUML_CPP_SOURCE_DIR:-/opt/rapids/cuml/cpp}/build" ]]; then
+    find "${CUML_CPP_SOURCE_DIR:-/opt/rapids/cuml/cpp}/build" -type d -empty -delete;
+fi

@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+cd "$(dirname "$(realpath "$0")")";
+
+deps="$(envsubst < <(echo "\$$(normalize-repo-name "$1")_dependencies"))";
+
+echo "$(IFS=,; echo $deps)";
