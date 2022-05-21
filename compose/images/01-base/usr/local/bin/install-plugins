@@ -1,0 +1,33 @@
+#! /usr/bin/env bash
+
+set -Eeou pipefail
+
+_reverse() {
+    set +u;
+    ary=${@}; eval eval echo "'\"\${ary['{$((${#ary[@]}-1))..0}']}\"'";
+}
+_join() {
+    local IFS='' delim=$1; shift; echo -n "$1"; shift; echo -n "${*/#/$delim}";
+}
+
+# Transform path to each plugin command of the form:
+#   `$plugins/rmm/cpp/build`
+# into symlinks of the form:
+#   `/usr/bin/build-rmm-cpp`
+
+plugins="${workspace:-/opt}/plugins"
+
+if [[ -d "$plugins" ]]; then
+    for path in $(find "$plugins" -type f); do
+        path="${path#$plugins/}";
+        dirn="$(dirname "$path")";
+        dirn="${dirn#.}";
+        # split dirname into array on /
+        ary=$(IFS=/; echo $dirn);
+        # reverse the array and join the contents
+        cmd=$(_join - $(basename "$path") $(_reverse $ary));
+        # create the symlink
+        sudo ln -sf "$plugins/$path" "/usr/bin/$cmd";
+    done;
+fi;
+exec "$@";

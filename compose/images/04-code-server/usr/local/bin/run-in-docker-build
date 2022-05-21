@@ -23,7 +23,6 @@ done
 
 deps="$(envsubst < <(echo "\$${repo}_dependencies"))";
 
-plugins="$(if [[ -d "$HOME/.plugins" ]]; then echo "$HOME/.plugins"; else echo "/opt/builder/plugins"; fi)";
 deps_="$(IFS=,; echo $deps)";
 mounts=$(
 for name in $repo $deps_; do echo "
@@ -36,13 +35,13 @@ for name in $repo $deps_; do echo "
 done
 )
 
-exec /usr/local/bin/builder/build \
+exec /opt/builder/build \
     --repo="$repo" \
     --prefix="$prefix" \
     --deps="plugins,$deps" \
     --base_image="$base_image" \
     --devel_image="$devel_image" \
-    --plugins_home="$plugins" \
+    --plugins_home="$HOME/plugins" \
     ${mounts} \
     \
     -- "$cmds"

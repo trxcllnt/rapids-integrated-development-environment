@@ -3,23 +3,20 @@
 ARG BASE_IMAGE
 ARG MAMBA_VERSION=4.12.0-0
 
-FROM ${BASE_IMAGE} as base
 FROM condaforge/mambaforge:${MAMBA_VERSION} as mambaforge
 
-FROM base as base-amd64
+FROM scratch as srcs-amd64
+ONBUILD ADD https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz  /usr/src/sccache.tar.gz
 
-ONBUILD WORKDIR /usr/local/src
-ONBUILD ADD https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz  sccache.tar.gz
+FROM scratch as srcs-arm64
+ONBUILD ADD https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-aarch64-unknown-linux-musl.tar.gz /usr/src/sccache.tar.gz
 
-FROM base as base-arm64
-
-ONBUILD WORKDIR /usr/local/src
-ONBUILD ADD https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-aarch64-unknown-linux-musl.tar.gz sccache.tar.gz
+FROM srcs-${TARGETARCH} as srcs
 
 #########
 # mamba #
 #########
-FROM base-${TARGETARCH}
+FROM ${BASE_IMAGE}
 
 USER root
 WORKDIR /
@@ -32,9 +29,11 @@ COPY --from=mambaforge /opt/conda /opt/conda
 
 ENV PATH="/opt/conda/bin:$PATH"
 
-RUN --mount=type=cache,target=/var/cache/apt \
-    --mount=type=cache,target=/var/lib/apt/lists \
+RUN --mount=type=secret,id=creds \
     --mount=type=bind,source=build,target=/opt/bin \
+    # Mount in the downloaded files
+    --mount=type=bind,from=srcs,source=/usr/src,target=/usr/src \
+    if [ -f /run/secrets/creds ]; then set -a; . /run/secrets/creds; set +a; fi; \
     /opt/bin/install-dependencies  \
  && /opt/bin/clean-up-dependencies
 

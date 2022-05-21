@@ -1,0 +1,57 @@
+#! /usr/bin/env bash
+
+set -Eeox pipefail
+
+unzip -q /usr/src/ucx.zip -d /usr/local/src;
+mv /usr/local/src/ucx-${UCX_VERSION} /usr/local/src/ucx;
+
+sed -i \
+    's/io_demo_LDADD =/io_demo_LDADD = $(CUDA_LDFLAGS)/' \
+    /usr/local/src/ucx/test/apps/iodemo/Makefile.am;
+
+# Using `script -c` to invoke sccache messes up autotools
+mv /usr/local/bin/sccache{,.bak}
+
+link-sccache;
+
+export LD=ld;
+export MAKEFLAGS="${MAKEFLAGS:+$MAKEFLAGS }-j$(nproc)";
+export CFLAGS="${CFLAGS:+$CFLAGS }-I/usr/local/cuda/include";
+export CXXFLAGS="${CXXFLAGS:+$CXXFLAGS }-I/usr/local/cuda/include";
+export CPPFLAGS="${CPPFLAGS:+$CPPFLAGS }-I/usr/local/cuda/include";
+
+cd /usr/local/src/ucx
+
+./autogen.sh;
+
+mkdir /usr/local/src/ucx/build;
+cd /usr/local/src/ucx/build;
+
+../contrib/configure-release \
+    --prefix=/usr \
+    --libdir=/usr/lib \
+    --exec-prefix=/usr \
+    --with-sysroot=/usr \
+    --enable-mt \
+    `# --enable-numa` \
+    `# --enable-openmp` \
+    `# --enable-devel-headers` \
+    --without-java \
+    `# --with-rc` \
+    `# --with-ud` \
+    `# --with-dc` \
+    `# --with-dm` \
+    `# --with-mlx5-dv` \
+    `# --with-ib-hw-tm` \
+    `# --with-gnu-ld` \
+    --with-cuda=/usr/local/cuda \
+    --disable-silent-rules \
+    `# --disable-dependency-tracking` \
+    ;
+
+make -j$(nproc);
+make -j$(nproc) install;
+
+unlink-sccache;
+
+mv /usr/local/bin/sccache{.bak,}

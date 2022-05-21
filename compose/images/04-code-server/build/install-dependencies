@@ -1,10 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeo pipefail
-
-# https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
-rm -f /etc/apt/apt.conf.d/docker-clean;
-echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+set -Eeox pipefail
 
 #######################################################
 # Install apt repos
@@ -73,4 +69,21 @@ echo "eval \"\$(gh completion -s bash)\"" >> /home/user/.bashrc
 #######################################################
 # Install code-server
 #######################################################
-dpkg -i /usr/local/src/code-server.deb
+dpkg -i /usr/src/code-server.deb
+
+#######################################################
+# Install code-server extensions
+#######################################################
+
+# CMake language support
+code-server --install-extension twxs.cmake || true;
+# Clang-Format
+code-server --install-extension xaver.clang-format || true;
+# Doxygen Documentation Generator
+code-server --install-extension cschlosser.doxdocgen || true;
+# Tasks Shell Input
+code-server --install-extension /usr/src/tasks-shell-input.vsix || true;
+# MS C++ Tools
+code-server --install-extension /usr/src/ms-vscode.cpptools.vsix || true;
+# NVIDIA Nsight
+code-server --install-extension /usr/src/nsight-vscode.vsix || true;

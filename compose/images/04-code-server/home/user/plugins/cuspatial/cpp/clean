@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+rm -rf ${CUSPATIAL_CPP_BINARY_DIR:-$workspace/cuspatial/cpp/build};
+if [[ -d "${CUSPATIAL_CPP_SOURCE_DIR:-$workspace/cuspatial/cpp}/build" ]]; then
+    find "${CUSPATIAL_CPP_SOURCE_DIR:-$workspace/cuspatial/cpp}/build" -type d -empty -delete;
+fi

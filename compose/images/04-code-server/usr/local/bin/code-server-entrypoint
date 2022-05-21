@@ -14,40 +14,6 @@ fi
 sudo chgrp docker $(which docker)
 sudo chmod g+s $(which docker)
 
-#######################################################
-# Install code-server extensions
-#######################################################
-(
-install_code_server_extensions() {
-    for EXT in ${@}; do
-        if [ ! "$(code-server --list-extensions | grep $EXT)" ]; then
-            code-server --install-extension $EXT
-        fi
-    done
-}
-
-install_code_server_extensions                \
-    `# CMake language support`                \
-    twxs.cmake                                \
-    `# Clang-Format`                          \
-    xaver.clang-format                        \
-    `# Doxygen Documentation Generator`       \
-    cschlosser.doxdocgen
-
-# Tasks Shell Input
-if [ ! "$(code-server --list-extensions | grep augustocdias.tasks-shell-input)" ]; then
-    code-server --install-extension /usr/local/src/tasks-shell-input.vsix || true;
-fi
-# MS C++ Tools
-if [ ! "$(code-server --list-extensions | grep ms-vscode.cpptools)" ]; then
-    code-server --install-extension /usr/local/src/ms-vscode.cpptools.vsix || true;
-fi
-# NVIDIA Nsight
-if [ ! "$(code-server --list-extensions | grep nvidia.nsight-vscode-edition)" ]; then
-    code-server --install-extension /usr/local/src/nsight-vscode.vsix || true;
-fi
-)
-
 if [[ ! "${PORT:-}" ]]; then
     PORT=8080
 fi

@@ -1,0 +1,10 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+time (
+    set -x;
+    cmake --build $workspace/cumlprims_mg/cpp/build -v -- -j${PARALLEL_LEVEL:-1} all;
+    { set +x; } 2>/dev/null;
+    echo -n "libcumlprims_mg compile time:";
+)

@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+/usr/local/bin/unlink-sccache;
+sudo ln -s /usr/local/bin/sccache-gcc /usr/local/bin/gcc;
+sudo ln -s /usr/local/bin/sccache-g++ /usr/local/bin/g++;

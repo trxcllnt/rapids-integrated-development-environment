@@ -1,0 +1,20 @@
+#! /usr/bin/env bash
+
+set -Eeox pipefail
+
+mkdir -p /usr/local/src/wheels;
+unzip -q /usr/src/ucx-py.zip -d /usr/local/src;
+mv /usr/local/src/ucx-py-${UCX_PY_BRANCH} /usr/local/src/ucx-py;
+
+pip download --no-cache-dir --disable-pip-version-check --no-deps -d /usr/local/src/wheels 'setuptools' 'cython>=0.29,<0.30';
+pip install  --no-cache-dir --disable-pip-version-check --upgrade /usr/local/src/wheels/*.whl;
+
+cd /usr/local/src/ucx-py;
+
+link-sccache;
+python setup.py build_ext -j$(nproc) --inplace bdist_wheel;
+unlink-sccache;
+
+cp dist/*.whl /usr/local/src/wheels/;
+
+pip install --no-cache-dir --disable-pip-version-check --upgrade /usr/local/src/wheels/*.whl

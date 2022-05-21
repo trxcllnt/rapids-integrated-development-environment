@@ -1,3 +1,3 @@
 #! /usr/bin/env bash
 
-exec script -q -c "/usr/bin/sccache $*" /dev/null | cat
+exec script -e -f -q -c "/usr/bin/sccache $*" /dev/null | cat

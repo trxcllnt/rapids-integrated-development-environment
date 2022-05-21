@@ -1,0 +1,26 @@
+#! /usr/bin/env bash
+
+set -Eeox pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+#######################################################
+# Install dependencies
+#######################################################
+apt update
+apt install -y --no-install-recommends          \
+    unzip zlib1g-dev liblz4-dev libzstd-dev     \
+    `# cuML/cuGraph/FAISS dependencies`         \
+    libnccl-dev                                 \
+    libblas-dev                                 \
+    liblapack-dev                               \
+    liblapacke-dev                              \
+    `# cuML/cuGraph multi-gpu dependencies`     \
+    libopenmpi-dev                              \
+    `# C++ build tools for UCX`                 \
+    automake autoconf libtool                   \
+    `# UCX dependencies`                        \
+    libnuma-dev                                 \
+    librdmacm-dev                               \
+    libibverbs-dev                              \
+    ;

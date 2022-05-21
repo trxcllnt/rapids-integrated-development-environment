@@ -1,10 +1,8 @@
 #! /usr/bin/env bash
 
-export DEBIAN_FRONTEND=noninteractive
+set -Eeox pipefail
 
-# https://github.com/moby/buildkit/blob/b8462c3b7c15b14a8c30a79fad298a1de4ca9f74/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
-rm -f /etc/apt/apt.conf.d/docker-clean;
-echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+export DEBIAN_FRONTEND=noninteractive
 
 #######################################################
 # Install dependencies

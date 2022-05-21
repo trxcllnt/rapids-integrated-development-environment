@@ -1,5 +1,6 @@
 z-*
 .env
+.creds.env
 
 compose/code-server/home/*
 !compose/code-server/home/.plugins

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeo pipefail
+set -Eeox pipefail
 
 #######################################################
 # Add non-root `user` user with passwordless sudo
@@ -18,7 +18,7 @@ echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd
 #######################################################
 
 # https://github.com/boxboat/fixuid#install-fixuid-in-dockerfile
-tar -C /usr/bin -xf /usr/local/src/fixuid.tar.gz
+tar -C /usr/bin -xf /usr/src/fixuid.tar.gz
 chown root:root /usr/bin/fixuid
 chmod 4755 /usr/bin/fixuid
 mkdir -p /etc/fixuid

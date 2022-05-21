@@ -19,7 +19,10 @@ services:
     image: pauletaylor/rapids-ide:cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
       context: compose/images/01-base
+      secrets:
+        - creds
       args:
+        SCCACHE_SERVER_PORT: 4326
         LINUX_DISTRO: ${LINUX_DISTRO:-ubuntu20.04}
         CUDA_VERSION_MAJOR: ${CUDA_VERSION_MAJOR:-11}
         CUDA_VERSION_MINOR: ${CUDA_VERSION_MINOR:-6}
@@ -31,7 +34,10 @@ services:
     image: pauletaylor/rapids-ide:gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
       context: compose/images/02-cpp
+      secrets:
+        - creds
       args:
+        SCCACHE_SERVER_PORT: 4327
         GCC_VERSION: ${GCC_VERSION:-9}
         BASE_IMAGE: pauletaylor/rapids-ide:cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     <<: *common_config
@@ -41,7 +47,10 @@ services:
     image: pauletaylor/rapids-ide:mamba${MAMBA_VERSION:-4.12.0-0}-python${PYTHON_VERSION:-3.9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
       context: compose/images/02-mamba
+      secrets:
+        - creds
       args:
+        SCCACHE_SERVER_PORT: 4328
         PYTHON_VERSION: ${PYTHON_VERSION:-3.9}
         MAMBA_VERSION: ${MAMBA_VERSION:-4.12.0-0}
         BASE_IMAGE: pauletaylor/rapids-ide:cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
@@ -52,7 +61,10 @@ services:
     image: pauletaylor/rapids-ide:python${PYTHON_VERSION:-3.9}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
       context: compose/images/03-python
+      secrets:
+        - creds
       args:
+        SCCACHE_SERVER_PORT: 4329
         PYTHON_VERSION: ${PYTHON_VERSION:-3.9}
         BASE_IMAGE: pauletaylor/rapids-ide:gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     <<: *common_config
@@ -62,7 +74,10 @@ services:
     image: pauletaylor/rapids-ide:code-server${CODE_SERVER_VERSION:-4.4.0}-python${PYTHON_VERSION:-3.9}-mamba${MAMBA_VERSION:-4.12.0-0}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
     build:
       context: compose/images/04-code-server
+      secrets:
+        - creds
       args:
+        SCCACHE_SERVER_PORT: 4330
         LINUX_DISTRO: ${LINUX_DISTRO:-ubuntu20.04}
         GCC_VERSION: ${GCC_VERSION:-9}
         MAMBA_VERSION: ${MAMBA_VERSION:-4.12.0-0}
@@ -84,10 +99,70 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/code-server-home:/tmp/code-server-home"
-      - "./compose/images/04-code-server/usr/local/bin/builder:/usr/local/bin/builder:ro"
-      - "./compose/images/04-code-server/usr/local/bin/install-plugins:/usr/local/bin/install-plugins:ro"
+      - "./compose/images/04-code-server/opt/builder:/opt/builder:ro"
+      - "./compose/images/04-code-server/opt/plugins:/opt/plugins:ro"
+      - "./compose/images/01-base/usr/local/bin/install-plugins:/usr/local/bin/install-plugins:ro"
       - "./compose/images/04-code-server/usr/local/bin/run-in-docker-build:/usr/local/bin/run-in-docker-build:ro"
     ports:
       - "8080:8080"
     command: --link
     <<: *run_with_gpu
+
+  03-cudf-cpp:
+    image: pauletaylor/rapids-ide:cudf-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    build:
+      context: compose/images/cudf
+      secrets:
+        - creds
+      args:
+        SCCACHE_SERVER_PORT: 4331
+        BASE_IMAGE: pauletaylor/rapids-ide:gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    <<: *common_config
+    <<: *run_with_gpu
+
+  04-cudf-python:
+    image: pauletaylor/rapids-ide:cudf-python${PYTHON_VERSION:-3.9}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    build:
+      context: compose/images/cudf
+      secrets:
+        - creds
+      args:
+        SCCACHE_SERVER_PORT: 4332
+        BASE_IMAGE: pauletaylor/rapids-ide:python${PYTHON_VERSION:-3.9}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    <<: *common_config
+    <<: *run_with_gpu
+
+  03-ucx-cpp:
+    image: pauletaylor/rapids-ide:ucx-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    build:
+      context: compose/images/ucx
+      secrets:
+        - creds
+      args:
+        IMAGE_TYPE: cpp
+        SCCACHE_SERVER_PORT: 4333
+        UCX_VERSION: ${UCX_VERSION:-1.12.1}
+        CUDA_DEVEL_IMAGE: nvidia/cuda:${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-devel-${LINUX_DISTRO:-ubuntu20.04}
+        BASE_IMAGE: pauletaylor/rapids-ide:gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    <<: *common_config
+    <<: *run_with_gpu
+
+  04-ucx-python:
+    image: pauletaylor/rapids-ide:ucx-python${PYTHON_VERSION:-3.9}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    build:
+      context: compose/images/ucx
+      secrets:
+        - creds
+      args:
+        IMAGE_TYPE: python
+        SCCACHE_SERVER_PORT: 4334
+        UCX_VERSION: ${UCX_VERSION:-1.12.1}
+        UCX_PY_BRANCH: ${UCX_PY_BRANCH:-branch-0.26}
+        CUDA_DEVEL_IMAGE: nvidia/cuda:${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-devel-${LINUX_DISTRO:-ubuntu20.04}
+        BASE_IMAGE: pauletaylor/rapids-ide:python${PYTHON_VERSION:-3.9}-gcc${GCC_VERSION:-9}-cuda${CUDA_VERSION_MAJOR:-11}.${CUDA_VERSION_MINOR:-6}.${CUDA_VERSION_PATCH:-2}-${LINUX_DISTRO:-ubuntu20.04}
+    <<: *common_config
+    <<: *run_with_gpu
+
+secrets:
+  creds:
+    file: .creds.env

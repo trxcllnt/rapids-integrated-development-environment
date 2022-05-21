@@ -1,8 +1,0 @@
-#! /usr/bin/env bash
-
-set -Eeo pipefail
-
-rm -rf ${CUGRAPH_OPS_CPP_BINARY_DIR:-/opt/rapids/cugraph-ops/build};
-if [[ -d "${CUGRAPH_OPS_CPP_SOURCE_DIR:-/opt/rapids/cugraph-ops}/build" ]]; then
-    find "${CUGRAPH_OPS_CPP_SOURCE_DIR:-/opt/rapids/cugraph-ops}/build" -type d -empty -delete;
-fi

@@ -1,0 +1,72 @@
+#! /usr/bin/env bash
+
+set -Eeo pipefail
+
+cd $(dirname "$(realpath "$0")");
+
+# Usage:
+# /opt/builder/build \
+#     --repo=cuspatial \
+#     --deps=rmm,cudf \
+#     --prefix=/opt/rapids \
+#     --base_image=nvidia/cuda:11.6.2-base-ubuntu20.04 \
+#     --devel_image=nvidia/cuda:11.6.2-devel-ubuntu20.04 \
+#     \
+#     --rmm_home=$PWD/rmm \
+#     --rmm_cpp_source_dir=rmm \
+#     --rmm_cpp_binary_dir=rmm/build/cuda_11.6.2/branch-22.06/release \
+#     --rmm_python_source_dir=rmm/python \
+#     --rmm_python_binary_dir=rmm/python/build/cuda_11.6.2/branch-22.06/wheel \
+#     \
+#     --cudf_home=$PWD/cudf \
+#     --cudf_cpp_source_dir=cudf/cpp \
+#     --cudf_cpp_binary_dir=cudf/cpp/build/cuda_11.6.2/branch-22.06/release \
+#     --cudf_python_source_dir=cudf/python/cudf \
+#     --cudf_python_binary_dir=cudf/python/cudf/build/cuda_11.6.2/branch-22.06/wheel \
+#     \
+#     --cuspatial_home=$PWD/cuspatial \
+#     --cuspatial_cpp_source_dir=cuspatial/cpp \
+#     --cuspatial_cpp_binary_dir=cuspatial/cpp/build/cuda_11.6.2/branch-22.06/release \
+#     --cuspatial_python_source_dir=cuspatial/python/cuspatial \
+#     --cuspatial_python_binary_dir=cuspatial/python/cuspatial/build/cuda_11.6.2/branch-22.06/wheel \
+#     \
+#     -- $(cat << EOF
+# cp "\$cuspatial_cpp_binary_dir_inner/cuspatial.txt" "\$cuspatial_cpp_binary_dir_inner/cuspatial-2.txt";
+# echo "build complete"
+# EOF
+# )
+
+set -a; source <(/opt/builder/args "$@"); set +a;
+
+deps="$(IFS=,; echo $deps)";
+
+rm_tmpdir=0
+if [[ -z "$tmpdir" ]]; then
+    rm_tmpdir=1
+    tmpdir="$(mktemp -d)";
+fi
+
+trap "if [[ $rm_tmpdir == 1 ]]; then rm -rf $tmpdir; fi" ERR EXIT
+
+echo -e "tmpdir:\n$tmpdir"
+echo -e "prefix:\n$prefix"
+echo -e "repo:\n$repo"
+echo -e "deps:\n$deps"
+echo -e "srcs:\n$srcs"
+echo -e "vars:\n$vars"
+echo -e "cmds:\n$cmds"
+
+/opt/builder/dockerfile "$@" > "$tmpdir/Dockerfile"
+
+echo -e "Dockerfile:\n"
+cat "$tmpdir/Dockerfile"
+echo -e ""
+
+out="$(realpath -m "$(echo "\$${repo}_home" | env - $(echo -e "$vars") envsubst)/..")";
+
+DOCKER_BUILDKIT=1 docker build \
+    --progress tty --no-cache \
+    -o type=tar,dest="$tmpdir/out.tar" \
+    - < <(/opt/builder/context --tmpdir="$tmpdir" "$@") \
+    > "$tmpdir/out.tar" \
+ && tar -C "$out" -xf "$tmpdir/out.tar"

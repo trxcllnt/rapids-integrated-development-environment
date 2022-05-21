@@ -20,15 +20,14 @@ ARG TARGETARCH
 ARG PYTHON_VERSION=3.9
 ENV PYTHON_VERSION="$PYTHON_VERSION"
 
-RUN --mount=type=cache,target=/var/cache/apt \
-    --mount=type=cache,target=/var/lib/apt/lists \
+RUN --mount=type=secret,id=creds \
     --mount=type=bind,source=build,target=/opt/bin \
+    if [ -f /run/secrets/creds ]; then set -a; . /run/secrets/creds; set +a; fi; \
     /opt/bin/install-dependencies  \
  && /opt/bin/clean-up-dependencies
 
 # Add utility scripts
 COPY --chown=root:root usr/local/bin /usr/local/bin
-COPY --chown=root:root --from=base /usr/local/bin/fixuid-and-set-home /usr/local/bin/
 
 ENV PYTHONDONTWRITEBYTECODE=1
 

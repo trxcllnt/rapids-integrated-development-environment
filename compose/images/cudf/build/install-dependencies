@@ -1,0 +1,15 @@
+#! /usr/bin/env bash
+
+set -Eeox pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+#######################################################
+# Install dependencies
+#######################################################
+apt update
+apt install -y --no-install-recommends          \
+    `# Arrow (cuDF) dependencies`               \
+    protobuf-compiler                           \
+    zlib1g-dev liblz4-dev libzstd-dev           \
+    libboost-{regex,system,filesystem}-dev

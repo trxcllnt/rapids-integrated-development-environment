@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -Eeo pipefail
+set -Eeox pipefail
 
 add-apt-repository --remove -y ppa:git-core/ppa
 add-apt-repository --remove -y ppa:ubuntu-toolchain-r/test
@@ -8,8 +8,7 @@ add-apt-repository --remove -y ppa:ubuntu-toolchain-r/test
 apt autoremove -y;
 apt clean;
 
-rm /etc/apt/apt.conf.d/keep-cache
-
 rm -rf /tmp/*;
 rm -rf /var/tmp/*;
-rm -rf /usr/local/src/*.tar.gz;
+rm -rf /var/cache/apt/*;
+rm -rf /var/lib/apt/lists/*;
